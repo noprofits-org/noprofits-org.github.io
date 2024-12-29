@@ -120,3 +120,29 @@ footer {
     text-align: center;
     color: #888;
 }
+
+/* Resource page styles */
+.resource-list {
+    list-style: none;
+    padding: 0;
+}
+
+.resource-list li {
+    margin-bottom: 1rem;
+}
+
+.resource-list li p {
+    font-size: 0.9rem;
+    color: #888;
+    margin-top: 0.25rem;
+}
+
+.resource-list a {
+    color: #fff;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.resource-list a:hover {
+    color: #ccc;
+}
