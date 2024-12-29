@@ -146,3 +146,10 @@ footer {
 .resource-list a:hover {
     color: #ccc;
 }
+
+.citation {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 1rem;
+    font-style: italic;
+}
