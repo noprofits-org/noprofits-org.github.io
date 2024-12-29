@@ -147,9 +147,10 @@ footer {
     color: #ccc;
 }
 
-.citation {
+.focus-item .citation {
     font-size: 0.8rem;
     color: #888;
     margin-top: 1rem;
-    font-style: italic;
+    font-style: italic !important;
+    line-height: 1.4;
 }
