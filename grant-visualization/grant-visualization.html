@@ -12,12 +12,13 @@
         }
         #controls {
             position: fixed;
-            top: 10px;
+            top: 70px;
             left: 10px;
             background: rgba(0,0,0,0.8);
             padding: 15px;
             border-radius: 4px;
             z-index: 1000;
+            max-width: 300px;
         }
         .control-group {
             margin-bottom: 10px;
@@ -26,10 +27,23 @@
             display: block;
             margin-bottom: 5px;
         }
-        input[type="number"] {
-            width: 100px;
+        input[type="number"], input[type="text"] {
+            width: 100%;
             padding: 5px;
-            margin-right: 10px;
+            margin-bottom: 10px;
+            background: #1e293b;
+            color: white;
+            border: 1px solid #475569;
+            border-radius: 4px;
+        }
+        select {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+            background: #1e293b;
+            color: white;
+            border: 1px solid #475569;
+            border-radius: 4px;
         }
         button {
             background: #4299e1;
@@ -38,6 +52,7 @@
             padding: 5px 10px;
             border-radius: 4px;
             cursor: pointer;
+            width: 100%;
         }
         button:hover {
             background: #3182ce;
@@ -58,8 +73,19 @@
     </style>
 </head>
 <body>
-    <p>Data sourced from joeisdone.github.io/charity (accessed January 2025)</p>
+    <div id="citation" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 10px; border-radius: 4px; z-index: 1000;">
+        Data sourced from joeisdone.github.io/charity (accessed January 2025)
+    </div>
     <div id="controls">
+        <div class="control-group">
+            <label>Filter by Organization:</label>
+            <input type="text" id="orgFilter" placeholder="Enter EIN or organization name">
+            <select id="matchingOrgs" size="3" style="display: none;"></select>
+        </div>
+        <div class="control-group">
+            <label>Connection Depth:</label>
+            <input type="number" id="depth" value="2" min="1" max="5">
+        </div>
         <div class="control-group">
             <label>Minimum Grant Amount ($):</label>
             <input type="number" id="minAmount" value="10000">
@@ -71,15 +97,31 @@
         <button onclick="updateVisualization()">Update View</button>
         <div id="stats"></div>
     </div>
+    
     <div class="legend">
-        Circle Size: Total grant volume (given + received)<br>
-        Line Thickness: Individual grant amount
+        <div style="margin-bottom: 10px;">
+            <strong>Node Colors by Depth:</strong><br>
+            <span style="color: #ef4444">●</span> Root Organization (Level 0)<br>
+            <span style="color: #f97316">●</span> Direct Connections (Level 1)<br>
+            <span style="color: #84cc16">●</span> Secondary Connections (Level 2)<br>
+            <span style="color: #06b6d4">●</span> Tertiary Connections (Level 3)<br>
+            <span style="color: #8b5cf6">●</span> Level 4<br>
+            <span style="color: #ec4899">●</span> Level 5
+        </div>
+        <div>
+            <strong>Size & Connections:</strong><br>
+            Circle Size: Total grant volume (given + received)<br>
+            Line Thickness: Individual grant amount<br>
+            Arrows: Direction of grant flow
+        </div>
     </div>
+
     <svg id="network" style="width:100vw; height:100vh;"></svg>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
         let originalData = null;
+        let orgLookup = new Map();
 
         async function loadData() {
             try {
@@ -101,21 +143,87 @@
             }
         }
 
+        function buildOrgLookup(charities) {
+            orgLookup.clear();
+            charities.forEach(charity => {
+                orgLookup.set(charity.filer_ein, charity.filer_name);
+                const searchStr = `${charity.filer_ein} ${charity.filer_name.toLowerCase()}`;
+                orgLookup.set(searchStr, charity.filer_ein);
+            });
+        }
+
+        function getConnectedOrgs(grants, startEIN, depth) {
+            const connected = new Map();
+            connected.set(startEIN, 0);
+            
+            let currentLevel = 0;
+            let frontier = new Set([startEIN]);
+            
+            while (currentLevel < depth && frontier.size > 0) {
+                const newFrontier = new Set();
+                
+                for (const ein of frontier) {
+                    for (const grant of grants) {
+                        // Check outgoing grants (where org is filer)
+                        if (grant.filer_ein === ein) {
+                            if (!connected.has(grant.grant_ein)) {
+                                connected.set(grant.grant_ein, currentLevel + 1);
+                                newFrontier.add(grant.grant_ein);
+                            }
+                        }
+                        // Check incoming grants (where org is recipient)
+                        if (grant.grant_ein === ein) {
+                            if (!connected.has(grant.filer_ein)) {
+                                connected.set(grant.filer_ein, currentLevel + 1);
+                                newFrontier.add(grant.filer_ein);
+                            }
+                        }
+                    }
+                }
+                
+                frontier = newFrontier;
+                currentLevel++;
+            }
+            
+            return connected;
+        }
+
         function filterData(charities, grants) {
             const minAmount = parseFloat(document.getElementById('minAmount').value);
             const maxOrgs = parseInt(document.getElementById('maxOrgs').value);
+            const orgFilter = document.getElementById('orgFilter').value.trim();
+            const depth = parseInt(document.getElementById('depth').value);
 
-            // Filter grants by amount
-            const filteredGrants = grants.filter(g => parseFloat(g.grant_amt) >= minAmount);
+            let filteredGrants = grants.filter(g => parseFloat(g.grant_amt) >= minAmount);
 
-            // Find organizations that are part of grant relationships
+            if (orgFilter) {
+                let startEIN = orgFilter;
+                const connectedOrgs = getConnectedOrgs(filteredGrants, startEIN, depth);
+                filteredGrants = filteredGrants.filter(grant => 
+                    connectedOrgs.has(grant.filer_ein) && connectedOrgs.has(grant.grant_ein)
+                );
+                
+                if (filteredGrants.length === 0) {
+                    const searchStr = orgFilter.toLowerCase();
+                    for (const [key, value] of orgLookup.entries()) {
+                        if (key.toLowerCase().includes(searchStr)) {
+                            startEIN = value;
+                            const connectedOrgs = getConnectedOrgs(filteredGrants, startEIN, depth);
+                            filteredGrants = filteredGrants.filter(grant => 
+                                connectedOrgs.has(grant.filer_ein) && connectedOrgs.has(grant.grant_ein)
+                            );
+                            if (filteredGrants.length > 0) break;
+                        }
+                    }
+                }
+            }
+
             const activeOrgs = new Set();
             filteredGrants.forEach(grant => {
                 activeOrgs.add(grant.filer_ein);
                 activeOrgs.add(grant.grant_ein);
             });
 
-            // Calculate total grant volume (given + received) for each organization
             const orgVolume = new Map();
             filteredGrants.forEach(grant => {
                 const amount = parseFloat(grant.grant_amt);
@@ -123,7 +231,6 @@
                 orgVolume.set(grant.grant_ein, (orgVolume.get(grant.grant_ein) || 0) + amount);
             });
 
-            // Get top organizations by volume
             const topOrgs = new Set(
                 Array.from(orgVolume.entries())
                     .filter(([ein]) => activeOrgs.has(ein))
@@ -132,7 +239,6 @@
                     .map(([ein]) => ein)
             );
 
-            // Filter grants to only include top organizations
             const finalGrants = filteredGrants.filter(
                 grant => topOrgs.has(grant.filer_ein) && topOrgs.has(grant.grant_ein)
             );
@@ -154,12 +260,23 @@
             const svg = d3.select('#network')
                 .attr('viewBox', [0, 0, width, height]);
 
-            // Create charity name lookup
+            // Add arrow marker definition
+            svg.append("defs").append("marker")
+                .attr("id", "arrow")
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", 20)
+                .attr("refY", 0)
+                .attr("markerWidth", 6)
+                .attr("markerHeight", 6)
+                .attr("orient", "auto")
+                .append("path")
+                .attr("d", "M0,-5L10,0L0,5")
+                .attr("fill", "#94a3b8");
+
             const charityNames = new Map(
                 charities.map(d => [d.filer_ein, d.filer_name])
             );
 
-            // Create nodes
             const uniqueEINs = new Set([
                 ...grants.map(d => d.filer_ein),
                 ...grants.map(d => d.grant_ein)
@@ -171,14 +288,12 @@
                 ein: ein
             }));
 
-            // Create links
             const links = grants.map(d => ({
                 source: d.filer_ein,
                 target: d.grant_ein,
                 value: +d.grant_amt
             }));
 
-            // Calculate node sizes based on total grant volume
             const grantVolume = new Map();
             grants.forEach(grant => {
                 const amount = +grant.grant_amt;
@@ -188,8 +303,15 @@
 
             nodes.forEach(node => {
                 const volume = grantVolume.get(node.id) || 0;
-                node.value = Math.sqrt(volume) / 10000; // Reduced scaling factor for smaller bubbles
+                node.value = Math.sqrt(volume) / 10000;
             });
+
+            // Get connected organizations for depth-based coloring
+            let connected = new Map();
+            const orgFilter = document.getElementById('orgFilter').value.trim();
+            if (orgFilter) {
+                connected = getConnectedOrgs(grants, orgFilter, parseInt(document.getElementById('depth').value));
+            }
 
             const simulation = d3.forceSimulation(nodes)
                 .force('link', d3.forceLink(links).id(d => d.id))
@@ -200,9 +322,10 @@
                 .selectAll('line')
                 .data(links)
                 .join('line')
-                .style('stroke', '#64748b')
-                .style('stroke-opacity', 0.6)
-                .style('stroke-width', d => Math.sqrt(d.value) / 10000); // Reduced scaling
+                .style('stroke', '#94a3b8')
+                .style('stroke-opacity', 0.8)
+                .style('stroke-width', d => Math.sqrt(d.value) / 8000)
+                .attr('marker-end', 'url(#arrow)');
 
             const node = svg.append('g')
                 .selectAll('g')
@@ -210,16 +333,26 @@
                 .join('g')
                 .call(drag(simulation));
 
-            node.append('circle')
-                .attr('r', d => Math.max(3, d.value * 10)) // Minimum size 3, reduced scaling
-                .style('fill', '#4299e1')
-                .style('stroke', '#2b6cb0')
-                .style('stroke-width', 1.5);
+            // Color scale for depth levels
+            const depthColors = d3.scaleOrdinal()
+                .domain([0, 1, 2, 3, 4, 5])
+                .range(['#ef4444', '#f97316', '#84cc16', '#06b6d4', '#8b5cf6', '#ec4899']);
 
-            // Add labels with both name and EIN
+            node.append('circle')
+                .attr('r', d => Math.max(3, d.value * 11.2))  // Increased by 12%
+                .style('fill', d => {
+                    const nodeDepth = connected.get(d.ein);
+                    return nodeDepth !== undefined ? depthColors(nodeDepth) : '#6b7280';
+                })
+                .style('stroke', d => {
+                    const nodeDepth = connected.get(d.ein);
+                    return nodeDepth !== undefined ? d3.color(depthColors(nodeDepth)).darker(0.5) : '#4b5563';
+                })
+                .style('stroke-width', 2);
+
             node.append('text')
                 .text(d => `${d.name} (${d.ein})`)
-                .attr('x', d => Math.max(3, d.value * 10) + 5)
+                .attr('x', d => Math.max(3, d.value * 11.2) + 5)
                 .attr('y', 3)
                 .style('fill', 'white')
                 .style('font-size', '8px')
@@ -233,7 +366,7 @@
                     .attr('y2', d => d.target.y);
 
                 node
-                    .attr('transform', d => `translate(${d.x},${d.y})`);
+                .attr('transform', d => `translate(${d.x},${d.y})`);
             });
 
             function drag(simulation) {
@@ -250,8 +383,6 @@
 
                 function dragended(event) {
                     if (!event.active) simulation.alphaTarget(0);
-                   // event.subject.fx = null;
-                   // event.subject.fy = null;
                 }
 
                 return d3.drag()
@@ -264,6 +395,9 @@
         async function updateVisualization() {
             if (!originalData) {
                 originalData = await loadData();
+                if (originalData) {
+                    buildOrgLookup(originalData.charities);
+                }
             }
             
             if (originalData) {
@@ -274,6 +408,49 @@
                 createVisualization(originalData.charities, filteredGrants);
             }
         }
+
+        // Add organization search functionality
+        document.getElementById('orgFilter').addEventListener('input', function(e) {
+            const input = e.target.value.toLowerCase();
+            const matchingOrgs = Array.from(orgLookup.entries())
+                .filter(([key]) => key.toLowerCase().includes(input))
+                .slice(0, 5);
+            
+            const selectEl = document.getElementById('matchingOrgs');
+            selectEl.innerHTML = '';
+            
+            if (matchingOrgs.length > 0 && input.length > 0) {
+                matchingOrgs.forEach(([key, value]) => {
+                    const option = document.createElement('option');
+                    option.value = value;
+                    option.textContent = key;
+                    selectEl.appendChild(option);
+                });
+                selectEl.style.display = 'block';
+            } else {
+                selectEl.style.display = 'none';
+            }
+        });
+
+        document.getElementById('matchingOrgs').addEventListener('click', function(e) {
+            const option = e.target;
+            if (option.tagName === 'OPTION') {
+                document.getElementById('orgFilter').value = option.value;
+                this.style.display = 'none';
+                updateVisualization();
+            }
+        });
+        
+        document.getElementById('matchingOrgs').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption) {
+                    document.getElementById('orgFilter').value = selectedOption.value;
+                    this.style.display = 'none';
+                    updateVisualization();
+                }
+            }
+        });
 
         window.addEventListener('load', updateVisualization);
     </script>
