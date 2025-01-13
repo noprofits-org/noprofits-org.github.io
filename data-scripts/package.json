@@ -1,0 +1,19 @@
+{
+  "type": "module",
+  "name": "data-scripts",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "noprofits-org.github.io"
+  },
+  "author": "Peter Johnston",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
+}
