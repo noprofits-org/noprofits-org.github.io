@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nonprofit Search</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <h1>Nonprofit Search</h1>
+    
+    <div class="search-container">
+        <input type="text" 
+               id="searchInput" 
+               class="search-input" 
+               placeholder="Enter organization name">
+        <button id="searchButton" 
+                class="search-button">Search</button>
+    </div>
+
+    <div id="resultsContainer"></div>
+
+    <div class="citation">
+        Data sourced from <a href="https://projects.propublica.org/nonprofits/" target="_blank">ProPublica Nonprofit Explorer</a>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const resultsContainer = document.getElementById('resultsContainer');
+        
+        const CORS_PROXIES = [
+            'https://api.allorigins.win/raw?url=',
+            'https://cors-anywhere.herokuapp.com/',
+            'https://cors.bridged.cc/'
+        ];
+        
+        let currentProxyIndex = 0;
+
+        async function tryFetchWithProxy(url) {
+            if (currentProxyIndex >= CORS_PROXIES.length) {
+                throw new Error('All CORS proxies failed. Please try again later.');
+            }
+
+            try {
+                const proxyUrl = CORS_PROXIES[currentProxyIndex] + encodeURIComponent(url);
+                const response = await fetch(proxyUrl);
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                return response;
+            } catch (error) {
+                currentProxyIndex++;
+                return tryFetchWithProxy(url);
+            }
+        }
+
+        async function searchNonprofits(searchTerm) {
+            try {
+                searchButton.disabled = true;
+                resultsContainer.innerHTML = '<div class="loading">Searching...</div>';
+
+                const apiUrl = `https://projects.propublica.org/nonprofits/api/v2/search.json?q=${encodeURIComponent(searchTerm)}`;
+                const response = await tryFetchWithProxy(apiUrl);
+                const data = await response.json();
+                
+                displayResults(data);
+            } catch (error) {
+                resultsContainer.innerHTML = `
+                    <div class="error-message">
+                        Error: ${error.message}<br>
+                        Please try again later or visit 
+                        <a href="https://projects.propublica.org/nonprofits/" target="_blank">
+                            ProPublica Nonprofit Explorer
+                        </a> directly.
+                    </div>
+                `;
+            } finally {
+                searchButton.disabled = false;
+            }
+        }
+
+        function displayResults(data) {
+            if (!data.organizations?.length) {
+                resultsContainer.innerHTML = '<div class="error-message">No organizations found</div>';
+                return;
+            }
+
+            const resultsHTML = data.organizations.map(org => `
+                <div class="org-card">
+                    <div class="org-name">${org.name}</div>
+                    <div class="org-meta">
+                        EIN: ${org.ein}<br>
+                        Location: ${org.city}, ${org.state}<br>
+                        <a href="https://projects.propublica.org/nonprofits/organizations/${org.ein}" target="_blank">
+                            View on ProPublica
+                        </a>
+                    </div>
+                </div>
+            `).join('');
+
+            resultsContainer.innerHTML = `
+                <div class="results-count">Found ${data.total_results} results</div>
+                ${resultsHTML}
+            `;
+        }
+
+        searchButton.addEventListener('click', () => {
+            const searchTerm = searchInput.value.trim();
+            if (searchTerm) {
+                searchNonprofits(searchTerm);
+            }
+        });
+
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const searchTerm = searchInput.value.trim();
+                if (searchTerm) {
+                    searchNonprofits(searchTerm);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
