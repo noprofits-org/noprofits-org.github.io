@@ -2,4 +2,4 @@ function initiaizeNonprofitExplorer() {
     console.log("Nonprofit Explorer initialized");
 }
 
-document.addEventListener('DOMContentloaded',initializedNonprofitExplorer);
+document.addEventListener('DOMContentloaded',initializeNonprofitExplorer);
