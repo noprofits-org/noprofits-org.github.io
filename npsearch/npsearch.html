@@ -434,15 +434,13 @@
                     <div class="section">
                         <h2 class="section-header">Efficiency Metrics</h2>
                         <div class="metric-grid">
-                           <div class="metric-card">
+                            <div class="metric-card">
                                 <h3>Program Efficiency</h3>
-                                <div class="metric-value">
+                                <div class="metric-value" id="program-efficiency">
                                     ${(ratios.programEfficiency * 100).toFixed(1)}%
                                     <div class="metric-bar">
-                                        <div 
-                                            class="metric-fill" 
-                                            style="width: ${ratios.programEfficiency * 100}%; 
-                                                background-color: ${getMetricColor('program', ratios.programEfficiency)}">
+                                        <div class="metric-fill" style="width: ${ratios.programEfficiency * 100}%; 
+                                            background-color: ${getMetricColor('program', ratios.programEfficiency)}">
                                         </div>
                                     </div>
                                 </div>
@@ -454,7 +452,9 @@
                                 <div class="metric-value" id="fundraising-efficiency">
                                     ${(ratios.fundraisingEfficiency * 100).toFixed(1)}%
                                     <div class="metric-bar">
-                                        <div class="metric-fill" style="width: ${Math.min(ratios.fundraisingEfficiency * 100, 100)}%"></div>
+                                        <div class="metric-fill" style="width: ${Math.min(ratios.fundraisingEfficiency * 100, 100)}%; 
+                                            background-color: ${getMetricColor('fundraising', ratios.fundraisingEfficiency)}">
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="metric-desc">Cost to raise each dollar</div>
@@ -465,13 +465,15 @@
                                 <div class="metric-value" id="admin-rate">
                                     ${(ratios.adminRate * 100).toFixed(1)}%
                                     <div class="metric-bar">
-                                        <div class="metric-fill" style="width: ${ratios.adminRate * 100}%"></div>
+                                        <div class="metric-fill" style="width: ${ratios.adminRate * 100}%;
+                                            background-color: ${getMetricColor('admin', ratios.adminRate)}">
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="metric-desc">Overhead expenses as percent of total</div>
                             </div>
                         </div>
-                        <div class="metric-desc">
+                        <div class="text-sm text-gray-500 mt-4">
                             Note: These metrics are calculated based on the organization's most recent Form 990 filing and may vary based on filing practices and reporting periods.
                         </div>
                     </div>
