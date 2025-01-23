@@ -92,27 +92,24 @@ function calculateEfficiencyRatios(filing) {
  * @returns {Object} Sustainability metrics
  */
 function calculateSustainabilityMetrics(filing) {
-    // Monthly expenses (total expenses / 12)
     const monthlyExpenses = (filing?.totfuncexpns || 0) / 12;
     
-    // Current assets and liabilities (more accurate for cash position)
-    const currentAssets = filing?.totcurrassets || 0;    // Using current assets
-    const currentLiabilities = filing?.totcurrliab || 0; // Using current liabilities
+    // Using total assets/liabilities instead of current assets/liabilities
+    const totalAssets = filing?.totassetsend || 0;    
+    const totalLiabilities = filing?.totliabend || 0; 
     
-    // Working capital (current assets - current liabilities)
-    const workingCapital = currentAssets - currentLiabilities;
-    
-    // Months of cash calculation using working capital
+    const workingCapital = totalAssets - totalLiabilities;
     const monthsOfCash = monthlyExpenses > 0 ? workingCapital / monthlyExpenses : 0;
 
-    // Debug log
     console.log('Sustainability Calculation:', {
         monthlyExpenses,
-        currentAssets,
-        currentLiabilities,
+        totalAssets,
+        totalLiabilities,
         workingCapital,
         monthsOfCash
     });
+    
+
     
     // Revenue sources for diversification
     const contributions = filing?.totcntrbgfts || 0;
@@ -137,8 +134,8 @@ function calculateSustainabilityMetrics(filing) {
             workingCapital,
             diversificationScore,
             raw: {
-                currentAssets,
-                currentLiabilities,
+                totalAssets,
+                totalLiabilities,
                 monthlyExpenses,
                 revenueSources: {
                     contributions,
