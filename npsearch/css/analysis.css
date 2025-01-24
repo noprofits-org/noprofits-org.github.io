@@ -160,3 +160,18 @@
     outline: 2px solid #4299e1;
     outline-offset: 2px;
 }
+
+.formula {
+    font-family: monospace;
+    color: #666;
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+    padding: 0.25rem;
+    background: rgba(0,0,0,0.1);
+    border-radius: 0.25rem;
+}
+
+.metric-desc {
+    margin-top: 0.5rem;
+    line-height: 1.4;
+}

@@ -18,7 +18,7 @@ function numberWithCommas(x) {
  */
 function formatCurrency(value, abbreviated = false) {
     if (!value) return '$0';
-    
+
     if (abbreviated) {
         if (value >= 1000000000) {
             return `$${(value / 1000000000).toFixed(1)}B`;
@@ -30,7 +30,7 @@ function formatCurrency(value, abbreviated = false) {
             return `$${(value / 1000).toFixed(0)}K`;
         }
     }
-    
+
     return `$${numberWithCommas(value)}`;
 }
 
@@ -59,29 +59,37 @@ function formatDate(dateString) {
  * @returns {Object} Calculated efficiency ratios
  */
 function calculateEfficiencyRatios(filing) {
-    // Extract base values with safe fallbacks
-    const totalExpenses = filing?.totfuncexpns || 0;
-    const totalContributions = filing?.totcntrbgfts || 0;
-    const programExpenses = filing?.progservexp || (totalExpenses * 0.88); // Use actual if available
-    const managementExpenses = filing?.managgenexp || (totalExpenses * 0.10);
-    const fundraisingExpenses = filing?.fundraisingexp || (totalExpenses * 0.02);
+    const totalExpenses = filing?.totfuncexpns;
+    const programExpenses = filing?.totprgmrevnue;
+    const totalContributions = filing?.totcntrbgfts;
+    const fundraisingExpenses = filing?.lessdirfndrsng;
+    const managementAndGeneralExpenses = filing?.gnlsothr;
 
-    // Calculate core efficiency ratios
-    const programEfficiency = totalExpenses > 0 ? programExpenses / totalExpenses : 0;
-    const fundraisingEfficiency = totalContributions > 0 ? fundraisingExpenses / totalContributions : 0;
-    const adminRate = totalExpenses > 0 ? managementExpenses / totalExpenses : 0;
+    const isValidNumber = (value) => typeof value === 'number' && !isNaN(value);
+
+    let programEfficiency = "NA";
+    if (isValidNumber(totalExpenses) && isValidNumber(programExpenses) && totalExpenses > 0) {
+        programEfficiency = (programExpenses / totalExpenses) * 100;
+    }
+
+    let fundraisingEfficiency = "NA";
+    if (isValidNumber(totalContributions) && isValidNumber(fundraisingExpenses) && totalContributions > 0) {
+        fundraisingEfficiency = (fundraisingExpenses / totalContributions) * 100;
+    }
+
+    let adminRate = "NA";
+    if (isValidNumber(totalExpenses) && isValidNumber(managementAndGeneralExpenses) && totalExpenses > 0) {
+        adminRate = (managementAndGeneralExpenses / totalExpenses) * 100;
+    }
 
     return {
         programEfficiency,
         fundraisingEfficiency,
         adminRate,
-        // Add raw values for reference
-        raw: {
-            totalExpenses,
-            totalContributions,
-            programExpenses,
-            managementExpenses,
-            fundraisingExpenses
+        formulas: {
+            programEfficiency: "Program Efficiency = (Program Service Expenses / Total Expenses) × 100%",
+            fundraisingEfficiency: "Fundraising Efficiency = (Fundraising Expenses / Total Contributions) × 100%",
+            adminRate: "Administrative Rate = (Management & General Expenses / Total Expenses) × 100%"
         }
     };
 }
@@ -92,61 +100,59 @@ function calculateEfficiencyRatios(filing) {
  * @returns {Object} Sustainability metrics
  */
 function calculateSustainabilityMetrics(filing) {
-    const monthlyExpenses = (filing?.totfuncexpns || 0) / 12;
-    
-    // Using total assets/liabilities instead of current assets/liabilities
-    const totalAssets = filing?.totassetsend || 0;    
-    const totalLiabilities = filing?.totliabend || 0; 
-    
-    const workingCapital = totalAssets - totalLiabilities;
-    const monthsOfCash = monthlyExpenses > 0 ? workingCapital / monthlyExpenses : 0;
+    const totalExpenses = filing?.totfuncexpns;
+    const totalAssets = filing?.totassetsend;
+    const totalLiabilities = filing?.totliabend;
+    const totalRevenue = filing?.totrevenue;
+    const programRevenue = filing?.totprgmrevnue;
+    const contributions = filing?.totcntrbgfts;
+    const investmentIncome = filing?.invstmntinc;
 
-    console.log('Sustainability Calculation:', {
-        monthlyExpenses,
-        totalAssets,
-        totalLiabilities,
-        workingCapital,
-        monthsOfCash
-    });
-    
+    // Helper function to check if a value is a valid number
+    const isValidNumber = (value) => typeof value === 'number' && !isNaN(value);
 
-    
-    // Revenue sources for diversification
-    const contributions = filing?.totcntrbgfts || 0;
-    const programRevenue = filing?.progrevenue || 0;
-    const investmentIncome = filing?.investinc || 0;
-    const otherRevenue = filing?.othrevenue || 0;
-    const totalRevenue = filing?.totrevenue || 0;
-
-    // Calculate revenue diversification (Herfindahl-Hirschman Index)
-    const revenueSources = [
-        contributions / totalRevenue,
-        programRevenue / totalRevenue,
-        investmentIncome / totalRevenue,
-        otherRevenue / totalRevenue
-    ].filter(share => !isNaN(share));
-
-    const diversificationScore = revenueSources.length > 0 ?
-        1 - revenueSources.reduce((sum, share) => sum + Math.pow(share, 2), 0) : 0;
-
-        return {
-            monthsOfCash,
-            workingCapital,
-            diversificationScore,
-            raw: {
-                totalAssets,
-                totalLiabilities,
-                monthlyExpenses,
-                revenueSources: {
-                    contributions,
-                    programRevenue,
-                    investmentIncome,
-                    otherRevenue,
-                    totalRevenue
-                }
-            }
-        };
+    let monthlyExpenses = "NA";
+    if (isValidNumber(totalExpenses)) {
+        monthlyExpenses = totalExpenses / 12;
     }
+
+    let workingCapital = "NA";
+    if (isValidNumber(totalAssets) && isValidNumber(totalLiabilities)) {
+        workingCapital = totalAssets - totalLiabilities;
+    }
+
+    let monthsOfCash = "NA";
+    if (isValidNumber(workingCapital) && isValidNumber(monthlyExpenses) && monthlyExpenses > 0) {
+        monthsOfCash = workingCapital / monthlyExpenses;
+    }
+
+    let otherRevenue = "NA";
+    if (isValidNumber(totalRevenue) && isValidNumber(programRevenue) && isValidNumber(contributions) && isValidNumber(investmentIncome)) {
+        otherRevenue = totalRevenue - programRevenue - contributions - investmentIncome;
+    }
+
+    let revenueSources = [];
+    if (isValidNumber(programRevenue) && isValidNumber(contributions) && isValidNumber(investmentIncome) && isValidNumber(otherRevenue)) {
+        revenueSources = [
+            { source: 'Program', amount: programRevenue },
+            { source: 'Contributions', amount: contributions },
+            { source: 'Investment', amount: investmentIncome },
+            { source: 'Other', amount: otherRevenue }
+        ].filter(source => source.amount > 0);
+    }
+
+    let diversificationScore = "NA";
+    if (revenueSources.length > 1 && isValidNumber(totalRevenue) && totalRevenue > 0) {
+        diversificationScore = revenueSources.reduce((sum, source) => sum + Math.pow(source.amount / totalRevenue, 2), 0);
+    }
+
+    return {
+        monthsOfCash,
+        workingCapital,
+        diversificationScore,
+        revenueSources
+    };
+}
 
 /**
  * Returns color coding for different metrics
@@ -192,7 +198,7 @@ function getMetricColor(metricType, value) {
         return '#EF4444';
     }
 
-    const result = metricThresholds.find(({threshold}) => value >= threshold);
+    const result = metricThresholds.find(({ threshold }) => value >= threshold);
     return result ? result.color : metricThresholds[metricThresholds.length - 1].color;
 }
 
@@ -204,15 +210,15 @@ function getMetricColor(metricType, value) {
  */
 function calculateGrowthRate(filings, metric) {
     if (!filings || filings.length < 2) return 0;
-    
+
     // Sort filings by year descending
-    const sortedFilings = [...filings].sort((a, b) => 
-        (b.tax_prd_yr || 0) - (a.tax_prd_yr || 0)
+    const sortedFilings = [...filings].sort((a, b) =>
+        (b.tax_prd_yr || "NA") - (a.tax_prd_yr || "NA")
     );
-    
-    const current = sortedFilings[0][metric] || 0;
-    const previous = sortedFilings[1][metric] || 0;
-    
+
+    const current = sortedFilings[0][metric] || "NA";
+    const previous = sortedFilings[1][metric] || "NA";
+
     if (previous === 0) return 0;
     return (current - previous) / previous;
 }
@@ -226,3 +232,4 @@ export {
     getMetricColor,
     calculateGrowthRate
 };
+

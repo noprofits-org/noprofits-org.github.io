@@ -11,17 +11,25 @@
 
 <body>
     <header>
-        <h1>NoProfits.org</h1>
-        <nav>
-            <ul>
-                <li><a href="#about" class="tab-link active" data-tab="about">About</a></li>
-                <li><a href="#mission" class="tab-link" data-tab="mission">Mission</a></li>
-                <li><a href="#resources" class="tab-link" data-tab="resources">Resources</a></li>
-                <li><a href="#contact" class="tab-link" data-tab="contact">Contact</a></li>
-                <li><a href="#analyses" class="tab-link" data-tab="analyses">Analyses</a></li>
-                <li><a href="#blog" class="tab-link" data-tab="blog">Blog</a></li>
-            </ul>
-        </nav>
+        <div class="container">
+            <h1>NoProfits.org</h1>
+            <button class="hamburger" id="hamburger">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </button>
+            <nav>
+                <ul class="nav-list">
+                    <li><a href="#about" class="tab-link active" data-tab="about">About</a></li>
+                    <li><a href="#mission" class="tab-link" data-tab="mission">Mission</a></li>
+                    <li><a href="#resources" class="tab-link" data-tab="resources">Resources</a></li>
+                    <li><a href="#contact" class="tab-link" data-tab="contact">Contact</a></li>
+                    <li><a href="#analyses" class="tab-link" data-tab="analyses">Analyses</a></li>
+                    <li><a href="#blog" class="tab-link" data-tab="blog">Blog</a></li>
+                    <li><a href="#metrics" class="tab-link" data-tab="metrics">Metrics</a></li>
+                </ul>
+            </nav>
+        </div>
     </header>
 
     <main>
@@ -169,10 +177,50 @@
             <p>Hey check out my <a href="https://noprofits.org/hakyll.blog" target="_blank">blog</a> where I post about
                 science, math, non-profits issues, and other stuff.</p>
         </section>
+
+        <section id="metrics" class="tab-content">
+            <h2>Financial Metrics for Non-Profits</h2>
+            <p>Understanding the financial health of a non-profit is crucial. These metrics can be derived from the IRS Form 990.</p>
+
+            <div class="focus-item">
+                <h3>Key Metrics</h3>
+                <ul class="resource-list">
+                    <li>
+                        <strong>Program Expense Ratio:</strong> (Program Service Expenses / Total Expenses) x 100<br>
+                        <em>990 Data:</em> Program Service Expenses (Part IX, line 24, col B), Total Expenses (Part IX, line 25, col A)
+                    </li>
+                    <li>
+                        <strong>Administrative Expense Ratio:</strong> (Management and General Expenses / Total Expenses) x 100<br>
+                        <em>990 Data:</em> Management & General (Part IX, line 24, col A), Total Expenses (Part IX, line 25, col A)
+                    </li>
+                    <li>
+                        <strong>Fundraising Efficiency Ratio:</strong> (Fundraising Expenses / Contributions) x 100<br>
+                        <em>990 Data:</em> Fundraising Expenses (Part IX, line 24, col D), Contributions (Part VIII, line 1a)
+                    </li>
+                    <li>
+                        <strong>Current Ratio:</strong> (Current Assets / Current Liabilities)<br>
+                        <em>990 Data:</em> Current Assets (Part X, Lines 1-6 sum), Current Liabilities (Part X, Lines 18-22 sum)
+                    </li>
+                    <li>
+                        <strong>Operating Reserve Ratio:</strong> (Unrestricted Net Assets / (Total Expenses / 12))<br>
+                        <em>990 Data:</em> Unrestricted Net Assets (Part X, line 30, col A), Total Expenses (Part IX, line 25, col A)
+                    </li>
+                </ul>
+            </div>
+            <p>Analyzing these metrics over time and comparing them to benchmarks provides valuable insights.</p>
+        </section>
         <footer>
             <p>&copy; 2024 NoProfits.org. All rights reserved.</p>
         </footer>
-
+        
+        <script>
+            const hamburger = document.getElementById('hamburger');
+            const navList = document.getElementById('nav-list');
+        
+            hamburger.addEventListener('click', () => {
+                navList.classList.toggle('show'); // Toggle the 'show' class
+            });
+        </script>
         <script>
             document.querySelectorAll('.tab-link').forEach(tab => {
                 tab.addEventListener('click', (e) => {

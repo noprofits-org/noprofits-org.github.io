@@ -286,3 +286,53 @@ footer {
 ::-webkit-scrollbar-thumb:hover {
     background: #444;
 }
+
+/* In your styles.css */
+nav ul.nav-list {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.hamburger {
+    display: none; /* Hide by default */
+    cursor: pointer;
+    padding: 10px;
+    background: none;
+    border: none;
+}
+
+.bar {
+    width: 25px;
+    height: 3px;
+    background-color: white;
+    margin: 5px 0;
+    transition: all 0.3s ease-in-out;
+}
+
+@media (max-width: 768px) {
+    nav ul.nav-list {
+        flex-direction: column;
+        align-items: center;
+        display: none; /* Hide the menu on mobile by default */
+        gap: 0.5rem;
+        position: absolute; /* Position the menu absolutely */
+        top: 60px; /* Adjust as needed */
+        left: 0;
+        width: 100%;
+        background-color: #1a1a1a;
+        padding: 1rem 0;
+        z-index: 100; /* Ensure it's on top */
+    }
+
+    nav ul.nav-list.show {
+        display: flex; /* Show the menu when the hamburger is clicked */
+    }
+
+    .hamburger {
+        display: block; /* Show the hamburger on mobile */
+        position: absolute; /* Position the hamburger */
+        top: 20px;
+        right: 20px;
+    }
+}

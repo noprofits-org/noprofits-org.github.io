@@ -1,19 +1,17 @@
 // search.js - Handles search functionality and results display
 import { searchNonprofits, getNonprofitDetails } from './api.js';
 import { 
-    formatCurrency, 
+    formatCurrency,
+    formatDate,
     calculateEfficiencyRatios,
     calculateSustainabilityMetrics,
-    getMetricColor 
+    getMetricColor,
+    numberWithCommas
 } from './utils.js';
 import { renderFinancialTrendsChart } from './charts.js';
-import { tryFetchWithProxy } from './api.js';
-import { numberWithCommas } from './utils.js';
+import { EfficiencyGauge } from './gauge.js';
 
-const searchInput = document.getElementById('searchInput');
-const searchButton = document.getElementById('searchButton');
-const resultsContainer = document.getElementById('resultsContainer');
-const modal = document.getElementById('analysisModal');
+let searchInput, searchButton, resultsContainer, modal;
 
 /**
  * Display historical filings data in a table format
@@ -80,181 +78,187 @@ function displayResults(data) {
     `;
 }
 
+// In search.js, add these section templates
+function getFinancialTrendsSection(data) {
+    return `
+        <div class="section">
+            <h2 class="section-header">Financial Trends</h2>
+            <div id="trendsChart" style="height: 300px; margin-bottom: 2rem;"></div>
+            <div id="previousYearsData">
+                ${data.filings_with_data ? displayFilingsHistory(data.filings_with_data) : 'No historical data available'}
+            </div>
+        </div>
+    `;
+}
 
+function getEfficiencySection(ratios) {
+    return `
+        <div class="section">
+            <h2 class="section-header">Efficiency Metrics</h2>
+            <div class="metric-grid">
+                <div id="program-efficiency-gauge"></div>
+                <div id="fundraising-efficiency-gauge"></div>
+                <div id="admin-rate-gauge"></div>
+            </div>
+            <div class="text-sm text-gray-500 mt-4">
+                Note: Metrics based on most recent Form 990 filing.
+            </div>
+        </div>
+    `;
+}
+
+function getSustainabilitySection(sustainability) {
+    const monthsOfCash = sustainability?.monthsOfCash || 0;
+    return `
+        <div class="section">
+            <h2 class="section-header">Sustainability Metrics</h2>
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <h3>Months of Cash</h3>
+                    <div class="metric-value" id="months-of-cash">
+                        ${typeof sustainability.monthsOfCash === 'number' ? sustainability.monthsOfCash.toFixed(1) + " months" : "NA"}
+                        <div class="metric-bar">
+                            <div class="metric-fill" style="width: ${typeof sustainability.monthsOfCash === 'number' ? Math.min(sustainability.monthsOfCash / 12 * 100, 100) : 0}%; 
+                                background-color: ${typeof sustainability.monthsOfCash === 'number' ? getMetricColor('sustainability', sustainability.monthsOfCash) : '#ccc'}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="metric-desc">Operating runway based on current assets</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function getOrgDetailsSection(org) {
+    return `
+        <div class="section">
+            <h2 class="section-header">Organization Details</h2>
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <h3>Organization Info</h3>
+                    <div class="metric-value">
+                        EIN: ${org.ein}<br>
+                        Location: ${org.city}, ${org.state}<br>
+                        Tax-Exempt Since: ${formatDate(org.tax_exempt_since)}<br>
+                        Last Filing: ${formatDate(org.latest_filing_date)}
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <h3>Classification</h3>
+                    <div class="metric-value">
+                        NTEE Code: ${org.ntee_code || 'N/A'}<br>
+                        Subsection: ${org.subsection_code || 'N/A'}<br>
+                        Foundation Status: ${org.foundation_code || 'N/A'}
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <h3>Latest Financial Data</h3>
+                    <div class="metric-value">
+                        Revenue: ${formatCurrency(org.income_amount)}<br>
+                        Assets: ${formatCurrency(org.asset_amount)}<br>
+                        ${org.exemption_number ? 'Exemption: ' + org.exemption_number : ''}
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <h3>Contact Information</h3>
+                    <div class="metric-value">
+                        Address: ${org.address ? `${org.address}, ${org.city}, ${org.state}` : 'N/A'}<br>
+                        ZIP: ${org.zipcode || 'N/A'}<br>
+                        ${org.website ? `Website: <a href="${org.website}" target="_blank" class="text-blue-500">${org.website}</a>` : ''}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function getFullReportSection(ein) {
+    return `
+        <div class="section">
+            <h2 class="section-header">Full Report</h2>
+            <div class="metric-card">
+                <div class="metric-value">
+                    <a href="https://projects.propublica.org/nonprofits/organizations/${ein}" 
+                       target="_blank" 
+                       class="text-blue-500">
+                        View on ProPublica →
+                    </a>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Update showAnalysis to use these sections
 async function showAnalysis(ein, orgName) {
     try {
         document.getElementById('modalOrgName').textContent = orgName;
         document.getElementById('modalContent').innerHTML = '<div class="loading-spinner"></div>';
         modal.style.display = 'block';
         
-        console.log('Fetching details for EIN:', ein);
-        const data = await getNonprofitDetails(ein);  // Using imported function instead of direct API call
-        
+        const data = await getNonprofitDetails(ein);
+        console.log("Filing data:", data.filings_with_data[0]);
+
         const org = data.organization;
+        
         if (!org) {
             throw new Error('Organization data not found');
         }
 
-        const taxExemptSince = org.tax_exempt_since ? 
-            new Date(org.tax_exempt_since).toLocaleDateString() : 'N/A';
-        const lastFiling = org.latest_filing_date ?
-            new Date(org.latest_filing_date).toLocaleDateString() : 'N/A';
+        const sustainability = calculateSustainabilityMetrics(data.filings_with_data[0] || {});
+        console.log("Sustainability:", sustainability);
 
-        // Debug what data we're getting
-        console.log('Organization data received:', org);
-        console.log("Filings data:", data.filings_with_data);
-
-        // Try to access filings data
-        const filings = data.filings_with_data || [];
-        const latestFiling = filings[0] || {};
-        console.log('Latest filing:', latestFiling);
-        const ratios = calculateEfficiencyRatios(latestFiling);
-        const sustainability = calculateSustainabilityMetrics(latestFiling);
-
-        const revenue = org.income_amount ? 
-            `${numberWithCommas(org.income_amount)}` : 'N/A';
-        const assets = org.asset_amount ?
-            `${numberWithCommas(org.asset_amount)}` : 'N/A';
-        const address = org.address || 'N/A';
-
-        console.log('Sustainability metrics:', sustainability); // Debug output
-
+        const ratios = calculateEfficiencyRatios(data.filings_with_data[0] || {});
+        console.log("Ratios:", ratios);
+        
+        // Compose modal content from sections
         document.getElementById('modalContent').innerHTML = `
-            <div class="section">
-                <h2 class="section-header">Financial Trends</h2>
-                <div id="trendsChart" style="height: 300px; margin-bottom: 2rem;"></div>
-                <div id="previousYearsData">
-                    ${data.filings_with_data ? displayFilingsHistory(data.filings_with_data) : 'No historical data available'}
-                </div>
-            </div>
-
-            <div class="section">
-                <h2 class="section-header">Sustainability Metrics</h2>
-                <div class="metric-grid">
-                    <div class="metric-card">
-                        <h3>Months of Cash</h3>
-                        <div class="metric-value" id="months-of-cash">
-                            ${sustainability.monthsOfCash.toFixed(1)} months
-                            <div class="metric-bar">
-                                <div class="metric-fill" style="width: ${Math.min(sustainability.monthsOfCash / 12 * 100, 100)}%; 
-                                    background-color: ${getMetricColor('sustainability', sustainability.monthsOfCash)}">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-desc">Operating runway based on current assets</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="section">
-                <h2 class="section-header">Efficiency Metrics</h2>
-                <div class="metric-grid">
-                    <div class="metric-card">
-                        <h3>Program Efficiency</h3>
-                        <div class="metric-value" id="program-efficiency">
-                            ${(ratios.programEfficiency * 100).toFixed(1)}%
-                            <div class="metric-bar">
-                                <div class="metric-fill" style="width: ${ratios.programEfficiency * 100}%; 
-                                    background-color: ${getMetricColor('program', ratios.programEfficiency)}">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-desc">Percentage of expenses going to programs</div>
-                    </div>
-
-                    <div class="metric-card">
-                        <h3>Fundraising Efficiency</h3>
-                        <div class="metric-value" id="fundraising-efficiency">
-                            ${(ratios.fundraisingEfficiency * 100).toFixed(1)}%
-                            <div class="metric-bar">
-                                <div class="metric-fill" style="width: ${Math.min(ratios.fundraisingEfficiency * 100, 100)}%; 
-                                    background-color: ${getMetricColor('fundraising', ratios.fundraisingEfficiency)}">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-desc">Cost to raise each dollar</div>
-                    </div>
-
-                    <div class="metric-card">
-                        <h3>Administrative Rate</h3>
-                        <div class="metric-value" id="admin-rate">
-                            ${(ratios.adminRate * 100).toFixed(1)}%
-                            <div class="metric-bar">
-                                <div class="metric-fill" style="width: ${ratios.adminRate * 100}%;
-                                    background-color: ${getMetricColor('admin', ratios.adminRate)}">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="metric-desc">Overhead expenses as percent of total</div>
-                    </div>
-                </div>
-                <div class="text-sm text-gray-500 mt-4">
-                    Note: These metrics are calculated based on the organization's most recent Form 990 filing and may vary based on filing practices and reporting periods.
-                </div>
-            </div>
-
-            <div class="section">
-                <h2 class="section-header">Organization Details</h2>
-                <div class="metric-grid">
-                    <div class="metric-card">
-                        <h3>Organization Info</h3>
-                        <div class="metric-value">
-                            EIN: ${org.ein}<br>
-                            Location: ${org.city}, ${org.state}<br>
-                            Tax-Exempt Since: ${taxExemptSince}<br>
-                            Last Filing: ${lastFiling}
-                        </div>
-                    </div>
-
-                    <div class="metric-card">
-                        <h3>Classification</h3>
-                        <div class="metric-value">
-                            NTEE Code: ${org.ntee_code || 'N/A'}<br>
-                            Subsection: ${org.subsection_code || 'N/A'}<br>
-                            Foundation Status: ${org.foundation_code || 'N/A'}
-                        </div>
-                    </div>
-
-                    <div class="metric-card">
-                        <h3>Latest Financial Data</h3>
-                        <div class="metric-value">
-                            Revenue: ${org.income_amount ? '$' + numberWithCommas(org.income_amount) : 'N/A'}<br>
-                            Assets: ${org.asset_amount ? '$' + numberWithCommas(org.asset_amount) : 'N/A'}<br>
-                            ${org.exemption_number ? 'Exemption: ' + org.exemption_number : ''}
-                        </div>
-                    </div>
-
-                    <div class="metric-card">
-                        <h3>Contact Information</h3>
-                        <div class="metric-value">
-                            Address: ${org.address ? `${org.address}, ${org.city}, ${org.state}` : 'N/A'}<br>
-                            ZIP: ${org.zipcode || 'N/A'}<br>
-                            ${org.website ? `Website: <a href="${org.website}" target="_blank" style="color: #4299e1;">${org.website}</a>` : ''}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        <div class="section">
-                <h2 class="section-header">Full Report</h2>
-                <div class="metric-card">
-                    <div class="metric-value">
-                        <a href="https://projects.propublica.org/nonprofits/organizations/${ein}" 
-                        target="_blank" 
-                        style="color: #4299e1;">
-                            View on ProPublica →
-                        </a>
-                    </div>
-                </div>
-            </div>
+            ${getFinancialTrendsSection(data)}
+            ${getEfficiencySection(ratios)}
+            ${getSustainabilitySection(sustainability)}
+            ${getOrgDetailsSection(org)}
+            ${getFullReportSection(ein)}
         `;
 
-        console.log("About to initialize chart");
-        if (data.filings_with_data && data.filings_with_data.length > 0) {
-            console.log("Have filings data, calling renderFinancialTrendsChart");
+        // Initialize gauges
+        new EfficiencyGauge('program-efficiency-gauge', {
+            value: typeof ratios.programEfficiency === 'number' ? ratios.programEfficiency : 0, // Default to 0 for gauge
+            label: 'Program Efficiency',
+            description: 'Percentage of expenses going to programs',
+            formula: ratios.formulas.programEfficiency
+        });
+
+        new EfficiencyGauge('fundraising-efficiency-gauge', {
+            value: typeof ratios.fundraisingEfficiency === 'number' ? ratios.fundraisingEfficiency : 0,
+            label: 'Fundraising Efficiency',
+            description: 'Cost to raise each dollar',
+            formula: ratios.formulas.fundraisingEfficiency,
+            thresholds: [
+                { value: 40, color: '#EF4444' },
+                { value: 30, color: '#FB923C' },
+                { value: 20, color: '#FBBF24' },
+                { value: 10, color: '#6EE7B7' },
+                { value: 0, color: '#34D399' }
+            ]
+        });
+
+        new EfficiencyGauge('admin-rate-gauge', {
+            value: typeof ratios.adminRate === 'number' ? ratios.adminRate : 0,
+            label: 'Administrative Rate',
+            description: 'Overhead expenses as percent of total',
+            formula: ratios.formulas.adminRate,
+            thresholds: [
+                { value: 25, color: '#EF4444' },
+                { value: 20, color: '#FB923C' },
+                { value: 15, color: '#FBBF24' },
+                { value: 10, color: '#6EE7B7' },
+                { value: 0, color: '#34D399' }
+            ]
+        });
+
+        if (data.filings_with_data?.length > 0) {
             renderFinancialTrendsChart('trendsChart', data.filings_with_data);
-        } else {
-            console.log("No filings data available for chart");
         }
 
     } catch (error) {
@@ -264,8 +268,8 @@ async function showAnalysis(ein, orgName) {
                 Unable to load analysis: ${error.message}
                 <br><br>
                 <a href="https://projects.propublica.org/nonprofits/organizations/${ein}" 
-                target="_blank"
-                style="color: #4299e1;">
+                   target="_blank"
+                   class="text-blue-500">
                     View on ProPublica →
                 </a>
             </div>
@@ -277,14 +281,18 @@ async function showAnalysis(ein, orgName) {
  * Handle the search process
  */
 async function handleSearch() {
+    console.log('Search triggered');
     const searchTerm = searchInput.value.trim();
+    console.log('Search term:', searchTerm);
     if (!searchTerm) return;
 
     try {
         searchButton.disabled = true;
         resultsContainer.innerHTML = '<div class="loading">Searching...</div>';
-
-        const data = await searchNonprofits(searchTerm); // Data is already parsed
+        
+        const data = await searchNonprofits(searchTerm);
+        console.log('Search results:', data);
+        
         if (!data || !data.organizations) {
             throw new Error('Invalid response from search');
         }
@@ -313,20 +321,23 @@ function closeModal() {
 }
 
 // Event Listeners
-searchButton.addEventListener('click', handleSearch);
+document.addEventListener('DOMContentLoaded', () => {
+    searchInput = document.getElementById('searchInput');
+    searchButton = document.getElementById('searchButton');
+    resultsContainer = document.getElementById('resultsContainer');
+    modal = document.getElementById('analysisModal');
 
-searchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        handleSearch();
-    }
+    searchButton.addEventListener('click', handleSearch);
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleSearch();
+    });
+    
+    window.onclick = (event) => {
+        if (event.target === modal) closeModal();
+    };
 });
 
-window.onclick = function(event) {
-    if (event.target === modal) {
-        closeModal();
-    }
-}
-
 // Export functions needed globally
+window.handleSearch = handleSearch;
 window.showAnalysis = showAnalysis;
 window.closeModal = closeModal;
