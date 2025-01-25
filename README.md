@@ -2,146 +2,72 @@
 
 A platform for transparency in social services funding.
 
-## API Documentation
+## Project Overview
 
-### ProPublica Nonprofit API Fields
+NoProfits.org is a web application designed to provide transparency and insights into the financial health of nonprofit organizations. Users can search for organizations by name and view details like their mission statement, financial data, and efficiency metrics. The platform also calculates and displays key performance indicators to help users assess the financial well-being and effectiveness of nonprofits.
 
-The API provides two main endpoints: search and organization details. Here are the key fields available:
+## Tech Stack
 
-#### Organization Details
-```javascript
-{
-    "id": "numeric_id",
-    "ein": "employer_identification_number",
-    "name": "organization_name",
-    "address": "street_address",
-    "city": "city_name",
-    "state": "state_code",
-    "zipcode": "zip_code",
-    "ntee_code": "nonprofit_type_code",
-    "raw_ntee_code": "detailed_category_code",
-    "subsection_code": "tax_classification_code",
-    "asset_amount": "total_assets",
-    "income_amount": "total_income",
-    "revenue_amount": "total_revenue",
-    "tax_period": "filing_period_YYYYMM"
-}
-```
+* Front-end: HTML, CSS (TailwindCSS), JavaScript (Chart.js)
+* API: ProPublica Nonprofit Explorer API (CORS proxy required for local development)
 
-#### Filing Data Fields
-```javascript
-{
-    "tax_prd": "YYYYMM",                    // Tax period 
-    "tax_prd_yr": "YYYY",                   // Tax year
-    "formtype": "form_type_code",           // Type of 990 form
-    
-    // Revenue Fields
-    "totrevenue": "total_revenue",          // Total revenue
-    "totcntrbgfts": "total_contributions",  // Total contributions/grants
-    "grsrcptsrelated170": "program_revenue",// Program service revenue
-    "invstmntinc": "investment_income",     // Investment income
-    
-    // Expense Fields
-    "totfuncexpns": "total_expenses",       // Total functional expenses
-    "profndraising": "fundraising_fees",    // Professional fundraising
-    "compnsatncurrofcr": "officer_comp",    // Officer compensation
-    "othrsalwages": "other_salaries",       // Other salaries and wages
-    "payrolltx": "payroll_taxes",           // Payroll taxes
-    
-    // Balance Sheet
-    "totassetsend": "total_assets",         // Total assets end of year
-    "totliabend": "total_liabilities",      // Total liabilities end
-    "totnetassetend": "net_assets",         // Net assets/fund balances
-    
-    // Program Details
-    "gftgrntsrcvd170": "grants_received",   // Grants received
-    "srvcsval170": "services_value",        // Value of services provided
-    
-    // Other Financial
-    "secrdmrtgsend": "secured_mortgages",   // Secured mortgages
-    "txexmptbndsend": "tax_exempt_bonds"    // Tax-exempt bonds
-}
-```
+## Local Development Setup
 
-## Efficiency Metrics
+1. Clone the repository.
+2. Install dependencies (if using a package manager like npm or yarn).
+3. Configure a local CORS proxy for ProPublica API requests (optional, but recommended for development).
+4. Open `index.html` in a web browser or use a local development server.
 
-The platform calculates and displays several key efficiency metrics with color-coded thresholds:
+## Code Structure
 
-1. Program Efficiency = Program Expenses / Total Expenses
-   * Excellent (Green): > 85%
-   * Good (Light Green): 75-85%
-   * Fair (Yellow): 65-75%
-   * Concerning (Orange): 50-65%
-   * Poor (Red): < 50%
+The codebase is primarily organized into three main JavaScript files:
 
-2. Fundraising Efficiency = Fundraising Costs / Total Contributions
-   * Excellent (Green): < 10%
-   * Good (Light Green): 10-20%
-   * Fair (Yellow): 20-30%
-   * Concerning (Orange): 30-40%
-   * Poor (Red): > 40%
+* `npsearch.html`: This file contains the HTML structure of the application, including search input fields, organization details display areas, and charts. It also includes JavaScript code for basic search functionality and data binding to the UI.
+* `styles.css`: This file contains TailwindCSS classes used for styling the application's layout and visual elements.
+* `nonprofits.js`: This file contains the core application logic, including:
+    * Fetching organization data from the ProPublica API.
+    * Parsing and processing API responses.
+    * Calculating efficiency metrics (program efficiency, fundraising efficiency, administrative rate).
+    * Generating chart data for financial trends visualization.
 
-3. Administrative Rate = Management & General / Total Expenses
-   * Excellent (Green): < 10%
-   * Good (Light Green): 10-15%
-   * Fair (Yellow): 15-20%
-   * Concerning (Orange): 20-25%
-   * Poor (Red): > 25%
+## Current Features
 
-Each metric includes:
-- Visual progress bar with color coding
-- Hover tooltip showing thresholds
-- Descriptive text explanation
+* **Search Functionality:** Users can search for nonprofit organizations by name.
+* **Organization Details:** Displays basic information about an organization, including its mission statement, address, and tax classification.
+* **Financial Data:** Shows key financial data points from the most recent 990 filing, including total revenue, expenses, assets, and liabilities.
+* **Efficiency Metrics:** Calculates and displays three key efficiency metrics with color-coded progress bars and hover tooltips for thresholds:
+    * Program Efficiency
+    * Fundraising Efficiency
+    * Administrative Rate
+* **Financial Trends Chart:** Visualizes trends in revenue, expenses, and net assets over time using Chart.js.
+* **Mobile-Responsive Design:** The application adjusts its layout for optimal viewing on various screen sizes.
+* **Basic Error Handling:** Handles potential errors during API requests and data processing.
 
-## Development
+## Next Steps
 
-### Local Setup
-1. Clone repository
-2. Open index.html in browser or use local server
-3. API requires CORS proxy for ProPublica endpoints
+The following features are planned for future development sessions:
 
-### Tech Stack
-- Pure JavaScript (no framework)
-- TailwindCSS for styling
-- Chart.js for visualizations
-- ProPublica Nonprofit Explorer API
+* **Additional Sustainability Metrics:**
+    * Months of Cash (based on current assets vs monthly expenses)
+    * Revenue Diversification metric
+    * Year-over-year growth visualization
+* **Search Enhancements:**
+    * Add state/region filter
+    * Add revenue range filter
+    * Add NTEE code (organization type) filter
+    * Save recent searches functionality
+* **UI/UX Improvements:**
+    * Add loading states for metrics calculations
+    * Implement comparison view for multiple organizations
+    * Add data download/export functionality
+    * Enhance mobile experience
+* **Documentation:**
+    * Add JSDoc comments to improve code readability
+    * Create contributing guidelines for developers interested in contributing to the project
+    * Add deployment instructions for deploying the application to a production environment
 
-## Current Project Status
+## Files to Modify for Adding New Features
 
-### Completed Features:
-- Basic search functionality
-- Organization details display
-- Efficiency metrics calculation and display
-- Color-coded metric visualization
-- Financial trends chart
-- Mobile-responsive design
-- Basic error handling
-
-### Next Steps for Development Session:
-
-1. Implement Additional Sustainability Metrics:
-   - Months of Cash (based on current assets vs monthly expenses)
-   - Revenue Diversification metric
-   - Year-over-year growth visualization
-
-2. Search Enhancements:
-   - Add state/region filter
-   - Add revenue range filter
-   - Add NTEE code (organization type) filter
-   - Save recent searches functionality
-
-3. UI/UX Improvements:
-   - Add loading states for metrics
-   - Implement comparison view for multiple organizations
-   - Add data download/export functionality
-   - Enhance mobile experience
-
-4. Documentation:
-   - Add JSDoc comments
-   - Create contributing guidelines
-   - Add deployment instructions
-
-FILES TO MODIFY:
-- npsearch.html: Add new metrics and filters
-- styles.css: Add styles for new components
-- nonprofits.js: Implement new calculations
+* `npsearch.html`: This file will likely require the most modifications to add new search filters, metrics, and UI components for displaying additional data or functionalities.
+* `styles.css`: New CSS classes might be needed to style the additional UI components introduced for new features.
+* `nonprofits.js`: The core logic for fetching data, calculating metrics, and generating visualizations might need to be extended to handle new metrics and functionalities.

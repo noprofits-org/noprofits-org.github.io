@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="css/analysis.css">
     <link rel="icon" href="../favicon.svg">
-    <!-- Chart.js must be loaded before our modules -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -16,27 +15,260 @@
     </header>
 
     <main>
-        <!-- Search Interface -->
-        <section class="search-section">
+        <nav class="nav-list">
+            <button class="nav-button active" data-tab="search">Search</button>
+            <button class="nav-button" data-tab="propublica-tags">ProPublica Tags</button>
+        </nav>
+
+        <section class="tab-content active" data-tab="search">
             <div class="search-container">
-                <input type="text" 
-                       id="searchInput" 
-                       class="search-input" 
-                       placeholder="Enter organization name">
-                <button id="searchButton" 
-                        class="search-button">Search</button>
+                <input type="text" id="searchInput" class="search-input" placeholder="Enter organization name">
+                <button id="searchButton" class="search-button">Search</button>
             </div>
-
-            <!-- Filters will be added here in future -->
-            <div id="filters" class="filters-container">
-                <!-- Placeholder for future filters -->
-            </div>
-
-            <!-- Results Container -->
+            <div id="filters" class="filters-container"></div>
             <div id="resultsContainer" class="results-container"></div>
         </section>
 
-        <!-- Analysis Modal -->
+        <section class="tab-content" data-tab="propublica-tags">
+            <h2>Key Nonprofit Financial Data from ProPublica</h2>
+            <p>This table provides a breakdown of key financial data points extracted from ProPublica's Nonprofit Explorer. Use this information as a starting point for your own research and analysis.</p>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Property</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>api_version</td>
+                        <td>The version of the ProPublica API used to retrieve this data.</td>
+                    </tr>
+                    <tr>
+                        <td>compnsatncurrofcr</td>
+                        <td>Compensation of current officers, directors, trustees, and key employees.</td>
+                    </tr>
+                    <tr>
+                        <td>cstbasisecur</td>
+                        <td>Cost basis of securities.</td>
+                    </tr>
+                    <tr>
+                        <td>cstbasisothr</td>
+                        <td>Cost basis of other assets.</td>
+                    </tr>
+                    <tr>
+                        <td>ein</td>
+                        <td>Employer Identification Number. The unique tax ID assigned to the organization by the IRS.</td>
+                    </tr>
+                    <tr>
+                        <td>formtype</td>
+                        <td>Indicates the type of 990 form filed.</td>
+                    </tr>
+                    <tr>
+                        <td>gftgrntsrcvd170</td>
+                        <td>Gifts, grants, contributions, and membership fees received from section 170 organizations.</td>
+                    </tr>
+                    <tr>
+                        <td>gnlsecur</td>
+                        <td>Net gain/loss from sales of securities.</td>
+                    </tr>
+                    <tr>
+                        <td>gnlsothr</td>
+                        <td>Net gain/loss from other sales.</td>
+                    </tr>
+                    <tr>
+                        <td>grsalesecur</td>
+                        <td>Gross sales of securities.</td>
+                    </tr>
+                    <tr>
+                        <td>grsalesinvent</td>
+                        <td>Gross sales of inventory.</td>
+                    </tr>
+                    <tr>
+                        <td>grsalesothr</td>
+                        <td>Gross sales of other assets.</td>
+                    </tr>
+                    <tr>
+                        <td>grsinc170</td>
+                        <td>Gross income from section 170 related activities.</td>
+                    </tr>
+                    <tr>
+                        <td>grsincfndrsng</td>
+                        <td>Gross income from fundraising events.</td>
+                    </tr>
+                    <tr>
+                        <td>grsincgaming</td>
+                        <td>Gross income from gaming activities.</td>
+                    </tr>
+                    <tr>
+                        <td>grsincmembers</td>
+                        <td>Gross income from membership dues.</td>
+                    </tr>
+                    <tr>
+                        <td>grsincother</td>
+                        <td>Gross income from other sources.</td>
+                    </tr>
+                    <tr>
+                        <td>grsrcptsadmissn509</td>
+                        <td>Gross receipts from admissions reported on Schedule O.</td>
+                    </tr>
+                    <tr>
+                        <td>grsrcptspublicuse</td>
+                        <td>Gross receipts from public use of facilities.</td>
+                    </tr>
+                    <tr>
+                        <td>grsrcptsrelated170</td>
+                        <td>Gross receipts from related activities.</td>
+                    </tr>
+                    <tr>
+                        <td>grsrntsprsnl</td>
+                        <td>Gross rents from personal property.</td>
+                    </tr>
+                    <tr>
+                        <td>grsrntsreal</td>
+                        <td>Gross rents from real property.</td>
+                    </tr>
+                    <tr>
+                        <td>initiationfees</td>
+                        <td>Initiation fees received.</td>
+                    </tr>
+                    <tr>
+                        <td>invstmntinc</td>
+                        <td>Investment income.</td>
+                    </tr>
+                    <tr>
+                        <td>lesscstofgoods</td>
+                        <td>Cost of goods sold.</td>
+                    </tr>
+                    <tr>
+                        <td>lessdirfndrsng</td>
+                        <td>Direct fundraising expenses.</td>
+                    </tr>
+                    <tr>
+                        <td>lessdirgaming</td>
+                        <td>Direct gaming expenses.</td>
+                    </tr>
+                    <tr>
+                        <td>miscrevtot11e</td>
+                        <td>Miscellaneous revenue reported on Schedule O.</td>
+                    </tr>
+                    <tr>
+                        <td>netgnls</td>
+                        <td>Net gain/loss from sales of assets.</td>
+                    </tr>
+                    <tr>
+                        <td>netincfndrsng</td>
+                        <td>Net income from fundraising events.</td>
+                    </tr>
+                    <tr>
+                        <td>netincgaming</td>
+                        <td>Net income from gaming activities.</td>
+                    </tr>
+                    <tr>
+                        <td>netincsales</td>
+                        <td>Net income from sales of inventory.</td>
+                    </tr>
+                    <tr>
+                        <td>netrntlinc</td>
+                        <td>Net rental income.</td>
+                    </tr>
+                    <tr>
+                        <td>nonpfrea</td>
+                        <td>Indicates if the organization is a private foundation (PF) or not.</td>
+                    </tr>
+                    <tr>
+                        <td>othrsalwages</td>
+                        <td>Other salaries and wages (excluding officer compensation).</td>
+                    </tr>
+                    <tr>
+                        <td>payrolltx</td>
+                        <td>Payroll taxes.</td>
+                    </tr>
+                    <tr>
+                        <td>pct_compnsatncurrofcr</td>
+                        <td>Percentage of total expenses represented by officer compensation.</td>
+                    </tr>
+                    <tr>
+                        <td>pdf_url</td>
+                        <td>Direct link to the original PDF of the 990 filing.</td>
+                    </tr>
+                    <tr>
+                        <td>profndraising</td>
+                        <td>Professional fundraising fees.</td>
+                    </tr>
+                    <tr>
+                        <td>retainedearnend</td>
+                        <td>Retained earnings at the end of the year.</td>
+                    </tr>
+                    <tr>
+                        <td>rntlexpnsprsnl</td>
+                        <td>Rental expenses for personal property.</td>
+                    </tr>
+                    <tr>
+                        <td>rntlexpnsreal</td>
+                        <td>Rental expenses for real property.</td>
+                    </tr>
+                    <tr>
+                        <td>rntlincprsnl</td>
+                        <td>Rental income from personal property.</td>
+                    </tr>
+                    <tr>
+                        <td>rntlincreal</td>
+                        <td>Rental income from real property.</td>
+                    </tr>
+                    <tr>
+                        <td>royaltsinc</td>
+                        <td>Royalty income.</td>
+                    </tr>
+                    <tr>
+                        <td>secrdmrtgsend</td>
+                        <td>Secured mortgages at the end of the year.</td>
+                    </tr>
+                    <tr>
+                        <td>srvcsval170</td>
+                        <td>Value of services provided to section 170 organizations.</td>
+                    </tr>
+                    <tr>
+                        <td>srvcsval509</td>
+                        <td>Value of services provided to section 509 organizations.</td>
+                    </tr>
+                    <tr>
+                        <td>subseccd</td>
+                        <td>Subsection code describing the type of exempt organization.</td>
+                    </tr>
+                    <tr>
+                        <td>subtotsuppinc509</td>
+                        <td>Subtotal of support and revenue reported on Schedule O.</td>
+                    </tr>
+                    <tr>
+                        <td>tax_pd</td>
+                        <td>The tax period end date.</td>
+                    </tr>
+                    <tr>
+                        <td>tax_prd_yr</td>
+                        <td>The tax year.</td>
+                    </tr>
+                    <tr>
+                        <td>totassetsend</td>
+                        <td>Total assets at the end of the year.</td>
+                    </tr>
+                    <tr>
+                        <td>totcntrbgfts</td>
+                        <td>Total contributions, gifts, and grants received.</td>
+                    </tr>
+                    <tr>
+                        <td>totfuncexpns</td>
+                        <td>Total functional expenses.</td>
+                    </tr>
+                    <tr>
+                        <td>totgftgrntrcvd509</td>
+                        <td>Total gifts, grants, and contributions received by 509 organizations.</td>
+                    </tr>
+                    <tr>
+                    </tbody>
+            </table>
+        </section>
+
         <div id="analysisModal" class="modal">
             <div class="modal-content">
                 <span class="close-button" onclick="closeModal()">&times;</span>
@@ -47,14 +279,39 @@
     </main>
 
     <footer>
-        <div class="citation">
-            Data sourced from 
-            <a href="https://projects.propublica.org/nonprofits/" 
-               target="_blank">ProPublica Nonprofit Explorer</a>
-        </div>
+        <div class="citation">Data sourced from <a href="https://projects.propublica.org/nonprofits/" target="_blank">ProPublica Nonprofit Explorer</a></div>
     </footer>
 
-    <!-- Import our modular JavaScript files -->
     <script type="module" src="js/search.js"></script>
+    <script>
+        const navList = document.querySelector('.nav-list');
+        const tabs = navList.querySelectorAll('.nav-button');
+        const tabContents = document.querySelectorAll('.tab-content[data-tab]'); // Correct selector
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+
+                tab.classList.add('active');
+                const targetTab = tab.dataset.tab;
+                const targetContent = document.querySelector(`.tab-content[data-tab="${targetTab}"]`); // Correct selector
+                if (targetContent) {
+                    targetContent.classList.add('active');
+                }
+            });
+        });
+
+        // Set initial active tab (important for the first load)
+        const initialTab = navList.querySelector('.nav-button.active');
+        if (initialTab) {
+            const initialTabName = initialTab.dataset.tab;
+            const initialContent = document.querySelector(`.tab-content[data-tab="${initialTabName}"]`); // Correct selector
+
+            if(initialContent){
+                initialContent.classList.add('active');
+            }
+        }
+    </script>
 </body>
 </html>

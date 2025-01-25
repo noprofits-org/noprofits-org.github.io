@@ -1,15 +1,11 @@
-// search.js - Handles search functionality and results display
+// search.js
 import { searchNonprofits, getNonprofitDetails } from './api.js';
-import { 
+import {
     formatCurrency,
     formatDate,
-    calculateEfficiencyRatios,
-    calculateSustainabilityMetrics,
-    getMetricColor,
     numberWithCommas
 } from './utils.js';
 import { renderFinancialTrendsChart } from './charts.js';
-import { EfficiencyGauge } from './gauge.js';
 
 let searchInput, searchButton, resultsContainer, modal;
 
@@ -18,9 +14,9 @@ let searchInput, searchButton, resultsContainer, modal;
  * @param {Array} filings - Array of filing data objects
  * @returns {string} HTML string for the filings table
  */
-function displayFilingsHistory(filings) {
+function displayFilingsHistory(filings) {  // <--- Restored function
     if (!filings || filings.length === 0) return 'No historical data available';
-    
+
     return `
         <table class="data-table">
             <thead>
@@ -34,10 +30,10 @@ function displayFilingsHistory(filings) {
             <tbody>
                 ${filings.map(filing => `
                     <tr>
-                        <td>${filing.tax_prd_yr || 'N/A'}</td>
-                        <td>${filing.totrevenue ? '$' + numberWithCommas(filing.totrevenue) : 'N/A'}</td>
-                        <td>${filing.totfuncexpns ? '$' + numberWithCommas(filing.totfuncexpns) : 'N/A'}</td>
-                        <td>${filing.totassetsend ? '$' + numberWithCommas(filing.totassetsend) : 'N/A'}</td>
+                        <td data-label="Year">${filing.tax_prd_yr || 'N/A'}</td>
+                        <td data-label="Revenue">${filing.totrevenue ? '$' + numberWithCommas(filing.totrevenue) : 'N/A'}</td>
+                        <td data-label="Expenses">${filing.totfuncexpns ? '$' + numberWithCommas(filing.totfuncexpns) : 'N/A'}</td>
+                        <td data-label="Assets">${filing.totassetsend ? '$' + numberWithCommas(filing.totassetsend) : 'N/A'}</td>
                     </tr>
                 `).join('')}
             </tbody>
@@ -45,15 +41,31 @@ function displayFilingsHistory(filings) {
     `;
 }
 
+function getFinancialTrendsSection(data) {
+    return `
+        <div class="section">
+            <h2 class="section-header">Financial Trends</h2>
+            <div id="trendsChart" style="height: 300px; margin-bottom: 2rem;"></div>
+            <div id="previousYearsData">
+                ${data.filings_with_data ? displayFilingsHistory(data.filings_with_data) : 'No historical data available'}
+            </div>
+        </div>
+    `;
+}
+
 /**
  * Display search results in the UI
  */
-
 function displayResults(data) {
     if (!data.organizations?.length) {
         resultsContainer.innerHTML = '<div class="error-message">No organizations found</div>';
         return;
     }
+
+    const resultsContainer = document.getElementById('resultsContainer');
+
+    // Clear any existing results
+    resultsContainer.innerHTML = '';
 
     const resultsHTML = data.organizations.map(org => `
         <div class="org-card">
@@ -70,64 +82,16 @@ function displayResults(data) {
                 </a>
             </div>
         </div>
-    `).join('');
+    `);
 
-    resultsContainer.innerHTML = `
-        <div class="results-count">Found ${data.total_results} results</div>
-        ${resultsHTML}
-    `;
-}
+    // Append the new results to the container
+    resultsContainer.innerHTML += resultsHTML.join('');
 
-// In search.js, add these section templates
-function getFinancialTrendsSection(data) {
-    return `
-        <div class="section">
-            <h2 class="section-header">Financial Trends</h2>
-            <div id="trendsChart" style="height: 300px; margin-bottom: 2rem;"></div>
-            <div id="previousYearsData">
-                ${data.filings_with_data ? displayFilingsHistory(data.filings_with_data) : 'No historical data available'}
-            </div>
-        </div>
-    `;
-}
-
-function getEfficiencySection(ratios) {
-    return `
-        <div class="section">
-            <h2 class="section-header">Efficiency Metrics</h2>
-            <div class="metric-grid">
-                <div id="program-efficiency-gauge"></div>
-                <div id="fundraising-efficiency-gauge"></div>
-                <div id="admin-rate-gauge"></div>
-            </div>
-            <div class="text-sm text-gray-500 mt-4">
-                Note: Metrics based on most recent Form 990 filing.
-            </div>
-        </div>
-    `;
-}
-
-function getSustainabilitySection(sustainability) {
-    const monthsOfCash = sustainability?.monthsOfCash || 0;
-    return `
-        <div class="section">
-            <h2 class="section-header">Sustainability Metrics</h2>
-            <div class="metric-grid">
-                <div class="metric-card">
-                    <h3>Months of Cash</h3>
-                    <div class="metric-value" id="months-of-cash">
-                        ${typeof sustainability.monthsOfCash === 'number' ? sustainability.monthsOfCash.toFixed(1) + " months" : "NA"}
-                        <div class="metric-bar">
-                            <div class="metric-fill" style="width: ${typeof sustainability.monthsOfCash === 'number' ? Math.min(sustainability.monthsOfCash / 12 * 100, 100) : 0}%; 
-                                background-color: ${typeof sustainability.monthsOfCash === 'number' ? getMetricColor('sustainability', sustainability.monthsOfCash) : '#ccc'}">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="metric-desc">Operating runway based on current assets</div>
-                </div>
-            </div>
-        </div>
-    `;
+    // Now you can add a results count element if needed
+    const resultsCount = document.createElement('div');
+    resultsCount.classList.add('results-count');
+    resultsCount.textContent = `Found ${data.total_results} results`;
+    resultsContainer.appendChild(resultsCount);
 }
 
 function getOrgDetailsSection(org) {
@@ -196,72 +160,46 @@ async function showAnalysis(ein, orgName) {
         document.getElementById('modalOrgName').textContent = orgName;
         document.getElementById('modalContent').innerHTML = '<div class="loading-spinner"></div>';
         modal.style.display = 'block';
-        
-        const data = await getNonprofitDetails(ein);
-        console.log("Filing data:", data.filings_with_data[0]);
 
-        const org = data.organization;
-        
-        if (!org) {
-            throw new Error('Organization data not found');
+        // *** THIS IS THE KEY CHANGE ***
+        let data; // Declare data variable here
+        try {
+            data = await getNonprofitDetails(ein); // Fetch the data
+        } catch (fetchError) {
+            console.error("Error fetching nonprofit details:", fetchError);
+            document.getElementById('modalContent').innerHTML = `
+                <div class="error-message">
+                    Unable to retrieve nonprofit details. Please try again later.
+                    <br><br>
+                    <a href="https://projects.propublica.org/nonprofits/organizations/${ein}" 
+                       target="_blank"
+                       class="text-blue-500">
+                        View on ProPublica →
+                    </a>
+                </div>
+            `;
+            return; // Important: Exit the function if fetching fails
+        }
+        // **********************************
+
+        if (!data || !data.organization) {
+            throw new Error('Organization data not found in the response');
         }
 
-        const sustainability = calculateSustainabilityMetrics(data.filings_with_data[0] || {});
-        console.log("Sustainability:", sustainability);
+        const org = data.organization;
 
-        const ratios = calculateEfficiencyRatios(data.filings_with_data[0] || {});
-        console.log("Ratios:", ratios);
-        
         // Compose modal content from sections
         document.getElementById('modalContent').innerHTML = `
             ${getFinancialTrendsSection(data)}
-            ${getEfficiencySection(ratios)}
-            ${getSustainabilitySection(sustainability)}
             ${getOrgDetailsSection(org)}
             ${getFullReportSection(ein)}
         `;
-
-        // Initialize gauges
-        new EfficiencyGauge('program-efficiency-gauge', {
-            value: typeof ratios.programEfficiency === 'number' ? ratios.programEfficiency : 0, // Default to 0 for gauge
-            label: 'Program Efficiency',
-            description: 'Percentage of expenses going to programs',
-            formula: ratios.formulas.programEfficiency
-        });
-
-        new EfficiencyGauge('fundraising-efficiency-gauge', {
-            value: typeof ratios.fundraisingEfficiency === 'number' ? ratios.fundraisingEfficiency : 0,
-            label: 'Fundraising Efficiency',
-            description: 'Cost to raise each dollar',
-            formula: ratios.formulas.fundraisingEfficiency,
-            thresholds: [
-                { value: 40, color: '#EF4444' },
-                { value: 30, color: '#FB923C' },
-                { value: 20, color: '#FBBF24' },
-                { value: 10, color: '#6EE7B7' },
-                { value: 0, color: '#34D399' }
-            ]
-        });
-
-        new EfficiencyGauge('admin-rate-gauge', {
-            value: typeof ratios.adminRate === 'number' ? ratios.adminRate : 0,
-            label: 'Administrative Rate',
-            description: 'Overhead expenses as percent of total',
-            formula: ratios.formulas.adminRate,
-            thresholds: [
-                { value: 25, color: '#EF4444' },
-                { value: 20, color: '#FB923C' },
-                { value: 15, color: '#FBBF24' },
-                { value: 10, color: '#6EE7B7' },
-                { value: 0, color: '#34D399' }
-            ]
-        });
 
         if (data.filings_with_data?.length > 0) {
             renderFinancialTrendsChart('trendsChart', data.filings_with_data);
         }
 
-    } catch (error) {
+    } catch (error) { // This catch now handles other errors, not the fetch error
         console.error('Analysis Error:', error);
         document.getElementById('modalContent').innerHTML = `
             <div class="error-message">
@@ -289,14 +227,22 @@ async function handleSearch() {
     try {
         searchButton.disabled = true;
         resultsContainer.innerHTML = '<div class="loading">Searching...</div>';
-        
+
+        const timeoutId = setTimeout(() => {
+            console.error('Search timed out');
+            resultsContainer.innerHTML = '<div class="error-message">Search timed out. Please try again later.</div>';
+            searchButton.disabled = false;
+        }, 10000); // Set a 10 second timeout
+
         const data = await searchNonprofits(searchTerm);
+        clearTimeout(timeoutId); // Clear the timeout if successful
+
         console.log('Search results:', data);
-        
+
         if (!data || !data.organizations) {
             throw new Error('Invalid response from search');
         }
-        displayResults(data);
+        displayResults(data); // <--- This line was missing!
     } catch (error) {
         console.error('Search error:', error);
         resultsContainer.innerHTML = `
@@ -331,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
     searchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleSearch();
     });
-    
+
     window.onclick = (event) => {
         if (event.target === modal) closeModal();
     };
