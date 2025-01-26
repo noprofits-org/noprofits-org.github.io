@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-    
 <head>
     <meta charset="UTF-8">
     <title>Nonprofit Grant Flow Network</title>
@@ -93,7 +92,7 @@
         </div>
         <div class="control-group">
             <label>Max Organizations to Show:</label>
-            <input type="number" id="maxOrgs" value="50">
+            <input type="number" id="maxOrgs" value="14">
         </div>
         <button onclick="updateVisualization()">Update View</button>
         <div id="stats"></div>
@@ -119,341 +118,35 @@
 
     <svg id="network" style="width:100vw; height:100vh;"></svg>
 
+    <!-- Load D3.js first -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script>
-        let originalData = null;
-        let orgLookup = new Map();
-
-        async function loadData() {
-            try {
-                const [charitiesResponse, grantsResponse] = await Promise.all([
-                    fetch('charities.csv'),
-                    fetch('grants.csv')
-                ]);
-                
-                const charitiesText = await charitiesResponse.text();
-                const grantsText = await grantsResponse.text();
-                
-                return {
-                    charities: d3.csvParse(charitiesText),
-                    grants: d3.csvParse(grantsText)
-                };
-            } catch (error) {
-                console.error('Error loading data:', error);
-                return null;
-            }
-        }
-
-        function buildOrgLookup(charities) {
-            orgLookup.clear();
-            charities.forEach(charity => {
-                orgLookup.set(charity.filer_ein, charity.filer_name);
-                const searchStr = `${charity.filer_ein} ${charity.filer_name.toLowerCase()}`;
-                orgLookup.set(searchStr, charity.filer_ein);
-            });
-        }
-
-        function getConnectedOrgs(grants, startEIN, depth) {
-            const connected = new Map();
-            connected.set(startEIN, 0);
-            
-            let currentLevel = 0;
-            let frontier = new Set([startEIN]);
-            
-            while (currentLevel < depth && frontier.size > 0) {
-                const newFrontier = new Set();
-                
-                for (const ein of frontier) {
-                    for (const grant of grants) {
-                        // Check outgoing grants (where org is filer)
-                        if (grant.filer_ein === ein) {
-                            if (!connected.has(grant.grant_ein)) {
-                                connected.set(grant.grant_ein, currentLevel + 1);
-                                newFrontier.add(grant.grant_ein);
-                            }
-                        }
-                        // Check incoming grants (where org is recipient)
-                        if (grant.grant_ein === ein) {
-                            if (!connected.has(grant.filer_ein)) {
-                                connected.set(grant.filer_ein, currentLevel + 1);
-                                newFrontier.add(grant.filer_ein);
-                            }
-                        }
-                    }
-                }
-                
-                frontier = newFrontier;
-                currentLevel++;
-            }
-            
-            return connected;
-        }
-
-        function filterData(charities, grants) {
-            const minAmount = parseFloat(document.getElementById('minAmount').value);
-            const maxOrgs = parseInt(document.getElementById('maxOrgs').value);
-            const orgFilter = document.getElementById('orgFilter').value.trim();
-            const depth = parseInt(document.getElementById('depth').value);
-
-            let filteredGrants = grants.filter(g => parseFloat(g.grant_amt) >= minAmount);
-
-            if (orgFilter) {
-                let startEIN = orgFilter;
-                const connectedOrgs = getConnectedOrgs(filteredGrants, startEIN, depth);
-                filteredGrants = filteredGrants.filter(grant => 
-                    connectedOrgs.has(grant.filer_ein) && connectedOrgs.has(grant.grant_ein)
-                );
-                
-                if (filteredGrants.length === 0) {
-                    const searchStr = orgFilter.toLowerCase();
-                    for (const [key, value] of orgLookup.entries()) {
-                        if (key.toLowerCase().includes(searchStr)) {
-                            startEIN = value;
-                            const connectedOrgs = getConnectedOrgs(filteredGrants, startEIN, depth);
-                            filteredGrants = filteredGrants.filter(grant => 
-                                connectedOrgs.has(grant.filer_ein) && connectedOrgs.has(grant.grant_ein)
-                            );
-                            if (filteredGrants.length > 0) break;
-                        }
-                    }
-                }
-            }
-
-            const activeOrgs = new Set();
-            filteredGrants.forEach(grant => {
-                activeOrgs.add(grant.filer_ein);
-                activeOrgs.add(grant.grant_ein);
-            });
-
-            const orgVolume = new Map();
-            filteredGrants.forEach(grant => {
-                const amount = parseFloat(grant.grant_amt);
-                orgVolume.set(grant.filer_ein, (orgVolume.get(grant.filer_ein) || 0) + amount);
-                orgVolume.set(grant.grant_ein, (orgVolume.get(grant.grant_ein) || 0) + amount);
-            });
-
-            const topOrgs = new Set(
-                Array.from(orgVolume.entries())
-                    .filter(([ein]) => activeOrgs.has(ein))
-                    .sort((a, b) => b[1] - a[1])
-                    .slice(0, maxOrgs)
-                    .map(([ein]) => ein)
-            );
-
-            const finalGrants = filteredGrants.filter(
-                grant => topOrgs.has(grant.filer_ein) && topOrgs.has(grant.grant_ein)
-            );
-
-            document.getElementById('stats').innerHTML = `
-                Showing ${topOrgs.size} organizations<br>
-                ${finalGrants.length} grants visible<br>
-                Total grants in dataset: ${grants.length}
-            `;
-
-            return { filteredGrants: finalGrants, topOrgs };
-        }
-
-        function createVisualization(charities, grants) {
-            d3.select('#network').selectAll('*').remove();
-
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-            const svg = d3.select('#network')
-                .attr('viewBox', [0, 0, width, height]);
-
-            // Add arrow marker definition
-            svg.append("defs").append("marker")
-                .attr("id", "arrow")
-                .attr("viewBox", "0 -5 10 10")
-                .attr("refX", 20)
-                .attr("refY", 0)
-                .attr("markerWidth", 6)
-                .attr("markerHeight", 6)
-                .attr("orient", "auto")
-                .append("path")
-                .attr("d", "M0,-5L10,0L0,5")
-                .attr("fill", "#94a3b8");
-
-            const charityNames = new Map(
-                charities.map(d => [d.filer_ein, d.filer_name])
-            );
-
-            const uniqueEINs = new Set([
-                ...grants.map(d => d.filer_ein),
-                ...grants.map(d => d.grant_ein)
-            ]);
-
-            const nodes = Array.from(uniqueEINs).map(ein => ({
-                id: ein,
-                name: charityNames.get(ein) || 'Unknown Organization',
-                ein: ein
-            }));
-
-            const links = grants.map(d => ({
-                source: d.filer_ein,
-                target: d.grant_ein,
-                value: +d.grant_amt
-            }));
-
-            const grantVolume = new Map();
-            grants.forEach(grant => {
-                const amount = +grant.grant_amt;
-                grantVolume.set(grant.filer_ein, (grantVolume.get(grant.filer_ein) || 0) + amount);
-                grantVolume.set(grant.grant_ein, (grantVolume.get(grant.grant_ein) || 0) + amount);
-            });
-
-            nodes.forEach(node => {
-                const volume = grantVolume.get(node.id) || 0;
-                node.value = Math.sqrt(volume) / 10000;
-            });
-
-            // Get connected organizations for depth-based coloring
-            let connected = new Map();
-            const orgFilter = document.getElementById('orgFilter').value.trim();
-            if (orgFilter) {
-                connected = getConnectedOrgs(grants, orgFilter, parseInt(document.getElementById('depth').value));
-            }
-
-            const simulation = d3.forceSimulation(nodes)
-                .force('link', d3.forceLink(links).id(d => d.id))
-                .force('charge', d3.forceManyBody().strength(-300))
-                .force('center', d3.forceCenter(width / 2, height / 2));
-
-            const link = svg.append('g')
-                .selectAll('line')
-                .data(links)
-                .join('line')
-                .style('stroke', '#94a3b8')
-                .style('stroke-opacity', 0.8)
-                .style('stroke-width', d => Math.sqrt(d.value) / 8000)
-                .attr('marker-end', 'url(#arrow)');
-
-            const node = svg.append('g')
-                .selectAll('g')
-                .data(nodes)
-                .join('g')
-                .call(drag(simulation));
-
-            // Color scale for depth levels
-            const depthColors = d3.scaleOrdinal()
-                .domain([0, 1, 2, 3, 4, 5])
-                .range(['#ef4444', '#f97316', '#84cc16', '#06b6d4', '#8b5cf6', '#ec4899']);
-
-            node.append('circle')
-                .attr('r', d => Math.max(3, d.value * 11.2))  // Increased by 12%
-                .style('fill', d => {
-                    const nodeDepth = connected.get(d.ein);
-                    return nodeDepth !== undefined ? depthColors(nodeDepth) : '#6b7280';
-                })
-                .style('stroke', d => {
-                    const nodeDepth = connected.get(d.ein);
-                    return nodeDepth !== undefined ? d3.color(depthColors(nodeDepth)).darker(0.5) : '#4b5563';
-                })
-                .style('stroke-width', 2);
-
-            node.append('text')
-                .text(d => `${d.name} (${d.ein})`)
-                .attr('x', d => Math.max(3, d.value * 11.2) + 5)
-                .attr('y', 3)
-                .style('fill', 'white')
-                .style('font-size', '8px')
-                .style('pointer-events', 'none');
-
-            simulation.on('tick', () => {
-                link
-                    .attr('x1', d => d.source.x)
-                    .attr('y1', d => d.source.y)
-                    .attr('x2', d => d.target.x)
-                    .attr('y2', d => d.target.y);
-
-                node
-                .attr('transform', d => `translate(${d.x},${d.y})`);
-            });
-
-            function drag(simulation) {
-                function dragstarted(event) {
-                    if (!event.active) simulation.alphaTarget(0.3).restart();
-                    event.subject.fx = event.subject.x;
-                    event.subject.fy = event.subject.y;
-                }
-
-                function dragged(event) {
-                    event.subject.fx = event.x;
-                    event.subject.fy = event.y;
-                }
-
-                function dragended(event) {
-                    if (!event.active) simulation.alphaTarget(0);
-                }
-
-                return d3.drag()
-                    .on('start', dragstarted)
-                    .on('drag', dragged)
-                    .on('end', dragended);
-            }
-        }
-
-        async function updateVisualization() {
-            if (!originalData) {
-                originalData = await loadData();
-                if (originalData) {
-                    buildOrgLookup(originalData.charities);
-                }
-            }
-            
-            if (originalData) {
-                const { filteredGrants, topOrgs } = filterData(
-                    originalData.charities,
-                    originalData.grants
-                );
-                createVisualization(originalData.charities, filteredGrants);
-            }
-        }
-
-        // Add organization search functionality
-        document.getElementById('orgFilter').addEventListener('input', function(e) {
-            const input = e.target.value.toLowerCase();
-            const matchingOrgs = Array.from(orgLookup.entries())
-                .filter(([key]) => key.toLowerCase().includes(input))
-                .slice(0, 5);
-            
-            const selectEl = document.getElementById('matchingOrgs');
-            selectEl.innerHTML = '';
-            
-            if (matchingOrgs.length > 0 && input.length > 0) {
-                matchingOrgs.forEach(([key, value]) => {
-                    const option = document.createElement('option');
-                    option.value = value;
-                    option.textContent = key;
-                    selectEl.appendChild(option);
-                });
-                selectEl.style.display = 'block';
-            } else {
-                selectEl.style.display = 'none';
-            }
-        });
-
-        document.getElementById('matchingOrgs').addEventListener('click', function(e) {
-            const option = e.target;
-            if (option.tagName === 'OPTION') {
-                document.getElementById('orgFilter').value = option.value;
-                this.style.display = 'none';
-                updateVisualization();
-            }
-        });
+    
+    <!-- Then load our modules -->
+    <script type="module">
+        import { GrantVisualizer } from './main.js';
         
-        document.getElementById('matchingOrgs').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                const selectedOption = this.options[this.selectedIndex];
-                if (selectedOption) {
-                    document.getElementById('orgFilter').value = selectedOption.value;
-                    this.style.display = 'none';
-                    updateVisualization();
-                }
+        // Wait for DOM and D3
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.d3) {
+                const visualizer = new GrantVisualizer();
+                visualizer.initialize().catch(error => {
+                    console.error('Failed to initialize:', error);
+                    // Show error to user
+                    const errorDiv = document.createElement('div');
+                    errorDiv.style.position = 'fixed';
+                    errorDiv.style.top = '50%';
+                    errorDiv.style.left = '50%';
+                    errorDiv.style.transform = 'translate(-50%, -50%)';
+                    errorDiv.style.background = 'rgba(239, 68, 68, 0.9)';
+                    errorDiv.style.padding = '20px';
+                    errorDiv.style.borderRadius = '8px';
+                    errorDiv.textContent = `Failed to load visualization: ${error.message}`;
+                    document.body.appendChild(errorDiv);
+                });
+            } else {
+                console.error('D3.js not loaded');
             }
         });
-
-        window.addEventListener('load', updateVisualization);
     </script>
 </body>
 </html>
