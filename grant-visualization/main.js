@@ -8,6 +8,7 @@ export class GrantVisualizer {
         this.dataManager = new DataManager();
         this.networkViz = null;
         this.controls = null;
+        this.currentFilters = null;
     }
 
     async initialize() {
@@ -31,6 +32,9 @@ export class GrantVisualizer {
             // Display initial message
             this.showWelcomeMessage();
 
+            // Handle window resize
+            window.addEventListener('resize', () => this.handleResize());
+
         } catch (error) {
             console.error("Initialization failed:", error);
             this.showError("Failed to initialize visualization: " + error.message);
@@ -39,11 +43,7 @@ export class GrantVisualizer {
 
     showWelcomeMessage() {
         const svg = d3.select('#network');
-
-        // Clear any existing content
         svg.selectAll("*").remove();
-
-        // Add welcome text
         svg.append("text")
             .attr("x", window.innerWidth / 2)
             .attr("y", window.innerHeight / 2)
@@ -66,9 +66,8 @@ export class GrantVisualizer {
     }
 
     async handleUpdate(filters) {
+        this.currentFilters = filters;
         try {
-
-            // Only proceed with visualization if an organization is selected
             if (!filters.orgFilter) {
                 this.showWelcomeMessage();
                 return;
@@ -92,17 +91,12 @@ export class GrantVisualizer {
         const width = window.innerWidth;
         const height = window.innerHeight;
 
-        this.networkViz = new NetworkVisualization(
-            d3.select('#network'),
-            width,
-            height
-        );
+        this.networkViz.resize(width, height);
 
-        // Re-render with current filters
-        const currentFilters = this.controls.getFilters();
-        if (currentFilters.orgFilter) {
-            this.handleUpdate(currentFilters).catch(console.error);
+        if (this.currentFilters) {
+            this.handleUpdate(this.currentFilters).catch(console.error);
         } else {
             this.showWelcomeMessage();
-        }    }
+        }
+    }
 }

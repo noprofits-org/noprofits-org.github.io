@@ -1,9 +1,10 @@
+// data.js
 export class DataManager {
     constructor() {
         this.orgLookup = new Map();
         this.originalData = null;
-        this.charities = {};             // EIN -> { name, receipt_amt, govt_amt, contrib_amt, grant_amt }
-        this.edgeAccumulator = {};       // "filer~grantee" -> totalGrant
+        this.charities = {};
+        this.edgeAccumulator = {};
         this.totalCharitiesCount = 0;
         this.totalGrantsCount = 0;
     }
@@ -180,48 +181,25 @@ export class DataManager {
 
     filterData(filters) {
         const { minAmount, maxOrgs, orgFilter, depth } = filters;
-    
+
         if (!orgFilter || !this.originalData) {
             return this.getEmptyResult();
         }
-    
-        // For depth 0, ONLY show the root organization
-        if (depth === 0) {
-            const connected = new Map([[orgFilter, 0]]);
-            // Find self-referential grants if they exist
-            const selfGrants = this.originalData.grants.filter(g => 
-                g.filer_ein === orgFilter && 
-                g.grant_ein === orgFilter &&
-                parseFloat(g.grant_amt) >= minAmount
-            );
-    
-            return {
-                grants: selfGrants,
-                orgs: new Set([orgFilter]),
-                connected,
-                stats: {
-                    orgCount: 1,
-                    grantCount: selfGrants.length,
-                    totalCharities: this.totalCharitiesCount,
-                    totalGrants: this.totalGrantsCount
-                }
-            };
-        }
-    
-        // Rest of the code for depth > 0 remains the same...
+
+        // Depth is now always >= 1, so no need for depth === 0 logic
         const connected = new Map([[orgFilter, 0]]);
-        const allValidGrants = this.originalData.grants.filter(g => 
+        const allValidGrants = this.originalData.grants.filter(g =>
             parseFloat(g.grant_amt) >= minAmount
         );
-    
+
         // BFS through the graph up to specified depth
         let frontier = new Set([orgFilter]);
         let currentDepth = 0;
         let filteredGrants = new Set();
-    
+
         while (currentDepth < depth && frontier.size > 0) {
             const newFrontier = new Set();
-    
+
             allValidGrants.forEach(grant => {
                 if (frontier.has(grant.filer_ein)) {
                     if (!connected.has(grant.grant_ein)) {
@@ -238,16 +216,16 @@ export class DataManager {
                     filteredGrants.add(grant);
                 }
             });
-    
+
             frontier = newFrontier;
             currentDepth++;
         }
-    
+
         const grantsArray = Array.from(filteredGrants);
         const adjustedMaxOrgs = maxOrgs - 1;
-        const { filteredGrants: finalGrants, topOrgs, stats } = 
+        const { filteredGrants: finalGrants, topOrgs, stats } =
             this.limitToTopOrgsWithRoot(grantsArray, adjustedMaxOrgs, orgFilter);
-    
+
         return {
             grants: finalGrants,
             orgs: topOrgs,
