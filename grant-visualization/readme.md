@@ -1,99 +1,98 @@
-# Nonprofit Grant Flow Network Visualizer
+# Nonprofit Grant Flow Network
 
-A D3.js-based visualization tool that displays grant relationships between nonprofit organizations. The visualization represents organizations as nodes and grants as directed edges, allowing users to explore funding relationships in the nonprofit sector.
+This project visualizes nonprofit grant flow networks, showing relationships between organizations through their grant activities. It also highlights government funding and taxpayer impact.
 
-## Overview
+## Current Status
 
-The Grant Flow Network Visualizer creates an interactive network graph showing how funding flows between nonprofit organizations. Organizations are represented as nodes, with their size indicating total grant volume (given + received). Directed edges show individual grants, with arrow direction indicating fund flow and line thickness representing grant amount.
+The visualization currently loads and displays nonprofit grant data with some interactivity, but several improvements are needed to match the reference implementation.
 
-## Features
+### Working Features
+- Basic data loading from CSV/ZIP files
+- Organization search by EIN or name
+- Basic network visualization
+- Financial data display
+- Government funding highlights
 
-- **Interactive Network Graph**: Drag and reposition nodes with sticky positioning
-- **Organization Search**: Filter visualization by specific organizations
-- **Connection Depth Control**: View funding relationships up to 5 levels deep
-- **Grant Amount Filtering**: Filter by minimum grant amount
-- **Organization Limiting**: Control visualization density by limiting number of organizations shown
-- **Color-Coded Relationships**: Different colors indicate relationship depth from selected organization
+### Areas for Improvement
 
-## Technical Implementation
+1. Initial Load Behavior
+- Currently: Loads and displays full graph on page load
+- Target: Should wait for user input (EIN or keyword) before displaying
+- Need to modify the initial data loading pattern
 
-The project is structured into several modular components:
+2. Data Filtering
+- Currently: Shows many interconnected nodes
+- Target: More selective filtering based on:
+  - User-specified EINs
+  - Keywords
+  - Connection depth
+  - Grant amounts
 
-### Core Components
+3. BFS Implementation
+- Need to implement multi-root BFS approach:
+  - Start from largest receipt_amt EIN
+  - Expand until 5+ nodes found
+  - Maintain proper level boundaries for coloring
+  - Respect depth settings
 
-- `DataManager`: Handles data loading and processing
-- `NetworkVisualization`: Manages the D3.js visualization
-- `Controls`: Handles user interface and input processing
-- `GrantVisualizer`: Main application class coordinating all components
+4. Visualization
+- Consider switching from D3.js to Viz.js for:
+  - Better hierarchical layout
+  - More consistent node placement
+  - Clearer relationship display
 
-### Data Structure
+## Key Dependencies
 
-The visualization uses two main CSV files:
-- `charities.csv`: Contains organization information
-  - Fields: filer_ein, filer_name, receipt_amt
-- `grants.csv`: Contains grant relationship data
-  - Fields: filer_ein, filer_name, grant_ein, grant_amt
+- JSZip: For handling compressed CSV files
+- PapaParse: For efficient CSV parsing
+- D3.js: Current visualization library
+- (Potential) Viz.js: For improved graph rendering
 
-### Visualization Logic
+## Data Structure
 
-- Node size is proportional to total grant volume
-- Edge thickness represents individual grant amounts
-- Color coding indicates relationship depth:
-  - Red: Root organization
-  - Orange: Direct connections
-  - Green: Secondary connections
-  - Blue: Tertiary connections
-  - Purple: Level 4 connections
-  - Pink: Level 5 connections
+### Charities CSV
+- filer_ein
+- filer_name
+- receipt_amt
+- govt_amt
+- contrib_amt
+- tax_year
 
-## Development History
+### Grants CSV
+- filer_ein
+- grant_ein
+- tax_year
+- grant_amt
 
-The project evolved from a single-file implementation to a modular structure:
-1. Initial version: All code in one HTML file
-2. Modularization: Split into separate components for better maintainability
-3. Enhanced features: Added sticky nodes and improved data validation
-4. UI improvements: Better error handling and user feedback
+## Next Steps
 
-## Planned Enhancements
+1. Update initial load behavior
+2. Implement reference BFS algorithm
+3. Fix depth control functionality
+4. Consider visualization library switch
+5. Add proper error handling
+6. Improve performance on large datasets
 
-1. **Navigation Improvements**
-   - Add zoom and pan controls
-   - Implement minimap for large networks
-   - Add ability to center on selected nodes
+## Reference Implementation Notes
 
-2. **Search Enhancements**
-   - Improved organization search with autocomplete
-   - Advanced filtering options
-   - Search history
+The reference implementation:
+- Uses Viz.js for graph rendering
+- Implements multi-root BFS search
+- Shows selective node relationships
+- Handles high taxpayer funding alerts
+- Provides clear visual hierarchy
+- Only loads visualization after user input
 
-3. **User Interface**
-   - Add reset button to unstick all nodes
-   - Node highlighting on hover to show connections
-   - Improved tooltips with detailed information
+## Directory Structure
 
-4. **Future Considerations**
-   - Performance optimizations for larger datasets
-   - Export functionality for subgraphs
-   - Support for different data formats
-   - Comparative visualization features
-
-## Setup and Usage
-
-1. Place all files in the same directory
-2. Ensure `charities.csv` and `grants.csv` are present
-3. Open `grant-visualization.html` in a web browser
-4. Use the control panel to:
-   - Search for specific organizations
-   - Adjust connection depth (1-5)
-   - Set minimum grant amount
-   - Limit number of organizations shown
-
-## Technical Requirements
-
-- Modern web browser with ES6 support
-- D3.js v7
-- No additional server requirements
-
-## Data Source
-
-Data sourced from joeisdone.github.io/charity (accessed January 2025)
+```
+grant-visualization/
+├── charities.csv
+├── grants.csv
+├── controls.js
+├── data.js
+├── main.js
+├── network.js
+├── styles.css
+└── grant-visualization.html
+```

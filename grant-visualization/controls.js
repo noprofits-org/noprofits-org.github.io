@@ -9,9 +9,11 @@ export class Controls {
     }
 
     setupEventListeners() {
-        // Organization search
+        // Organization search elements
         const orgFilter = document.getElementById('orgFilter');
         const matchingOrgs = document.getElementById('matchingOrgs');
+        const updateViewBtn = document.getElementById('updateViewBtn');
+        const generateBtn = document.getElementById('generateBtn');
 
         // Debounced search handler
         let searchTimeout;
@@ -30,35 +32,57 @@ export class Controls {
             this.triggerUpdate();
         };
 
-        // Add event listeners
-        this.addListener(orgFilter, 'input', handleSearch);
-        this.addListener(matchingOrgs, 'click', (e) => {
-            if (e.target.tagName === 'OPTION') {
-                handleOrgSelect(e.target);
-            }
-        });
+        // Add core event listeners
+        if (orgFilter) {
+            this.addListener(orgFilter, 'input', handleSearch);
+        }
 
-        // Keyboard navigation
-        this.addListener(matchingOrgs, 'keydown', (e) => {
-            if (e.key === 'Enter') {
-                const selectedOption = matchingOrgs.options[matchingOrgs.selectedIndex];
-                if (selectedOption) {
-                    handleOrgSelect(selectedOption);
+        if (matchingOrgs) {
+            // Click handler for org selection
+            this.addListener(matchingOrgs, 'click', (e) => {
+                if (e.target.tagName === 'OPTION') {
+                    handleOrgSelect(e.target);
                 }
-            }
-        });
+            });
 
-        // Update button
-        this.addListener(
-            document.querySelector('button'), 
-            'click', 
-            () => this.triggerUpdate()
-        );
+            // Keyboard navigation
+            this.addListener(matchingOrgs, 'keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const selectedOption = matchingOrgs.options[matchingOrgs.selectedIndex];
+                    if (selectedOption) {
+                        handleOrgSelect(selectedOption);
+                    }
+                }
+            });
+        }
 
-        // Add input validation listeners
+        // Update/Generate buttons
+        if (updateViewBtn) {
+            this.addListener(updateViewBtn, 'click', () => this.triggerUpdate());
+        }
+        if (generateBtn) {
+            this.addListener(generateBtn, 'click', () => this.triggerUpdate());
+        }
+
+        // Input validation listeners
         ['minAmount', 'maxOrgs', 'depth'].forEach(id => {
             const input = document.getElementById(id);
-            this.addListener(input, 'change', () => this.validateInputs());
+            if (input) {
+                this.addListener(input, 'change', () => this.validateInputs());
+            }
+        });
+
+        // Timeout recovery
+        window.addEventListener('unhandledrejection', (event) => {
+            if (event.reason && event.reason.toString().includes('timeout')) {
+                console.log('Recovering from timeout...');
+                this.enableControls();
+                const status = document.getElementById('status');
+                if (status) {
+                    status.textContent = 'Operation timed out. Please try again.';
+                    status.style.color = 'orange';
+                }
+            }
         });
     }
 
@@ -67,9 +91,9 @@ export class Controls {
             console.warn(`Element not found for event: ${event}`);
             return;
         }
-        
+
         element.addEventListener(event, handler);
-        
+
         // Store for cleanup
         if (!this.eventListeners.has(element)) {
             this.eventListeners.set(element, []);
@@ -80,7 +104,7 @@ export class Controls {
     setupInputValidation() {
         // Set initial valid values
         this.validateInputs();
-        
+
         // Add validation on form submission
         const form = document.querySelector('form');
         if (form) {
@@ -99,7 +123,7 @@ export class Controls {
         selectEl.innerHTML = '';
 
         if (matches.length > 0) {
-            matches.forEach(({ein, name}) => {
+            matches.forEach(({ ein, name }) => {
                 const option = document.createElement('option');
                 option.value = ein;
                 option.textContent = `${name} (${ein})`;
@@ -136,7 +160,7 @@ export class Controls {
         const elements = {
             minAmount: { min: 0, max: Infinity, default: 10000 },
             maxOrgs: { min: 1, max: 100, default: 14 },
-            depth: { min: 1, max: 5, default: 2 }
+            depth: { min: 0, max: 5, default: 2 }
         };
 
         Object.entries(elements).forEach(([id, constraints]) => {

@@ -11,34 +11,72 @@ export class GrantVisualizer {
     }
 
     async initialize() {
-        // Load initial data
-        const data = await this.dataManager.loadData();
-        if (!data) {
-            throw new Error('Failed to load data');
+        console.log("Starting initialization...");
+        try {
+            // Load initial data but don't visualize yet
+            await this.dataManager.loadData();
+
+            // Initialize visualization
+            const svg = d3.select('#network');
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            console.log("Creating network visualization...");
+            this.networkViz = new NetworkVisualization(svg, width, height);
+
+            // Initialize controls
+            console.log("Initializing controls...");
+            this.controls = new Controls(this.dataManager, this.handleUpdate.bind(this));
+
+            // Display initial message
+            this.showWelcomeMessage();
+
+        } catch (error) {
+            console.error("Initialization failed:", error);
+            this.showError("Failed to initialize visualization: " + error.message);
         }
+    }
 
-        // Initialize visualization
+    showWelcomeMessage() {
         const svg = d3.select('#network');
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        
-        this.networkViz = new NetworkVisualization(svg, width, height);
 
-        // Initialize controls
-        this.controls = new Controls(this.dataManager, this.handleUpdate.bind(this));
+        // Clear any existing content
+        svg.selectAll("*").remove();
 
-        // Perform initial update
-        await this.handleUpdate(this.controls.getFilters());
+        // Add welcome text
+        svg.append("text")
+            .attr("x", window.innerWidth / 2)
+            .attr("y", window.innerHeight / 2)
+            .attr("text-anchor", "middle")
+            .attr("fill", "white")
+            .text("Please select an organization to begin visualization");
+    }
 
-        // Add window resize handler
-        window.addEventListener('resize', this.handleResize.bind(this));
+    showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.style.position = 'fixed';
+        errorDiv.style.top = '50%';
+        errorDiv.style.left = '50%';
+        errorDiv.style.transform = 'translate(-50%, -50%)';
+        errorDiv.style.background = 'rgba(239, 68, 68, 0.9)';
+        errorDiv.style.padding = '20px';
+        errorDiv.style.borderRadius = '8px';
+        errorDiv.textContent = message;
+        document.body.appendChild(errorDiv);
     }
 
     async handleUpdate(filters) {
         try {
+
+            // Only proceed with visualization if an organization is selected
+            if (!filters.orgFilter) {
+                this.showWelcomeMessage();
+                return;
+            }
+
             // Process data with filters
             const filteredData = this.dataManager.filterData(filters);
-            
+
             // Update stats display
             this.controls.updateStats(filteredData.stats);
 
@@ -46,21 +84,25 @@ export class GrantVisualizer {
             this.networkViz.update(filteredData, this.dataManager.originalData.charities);
         } catch (error) {
             console.error('Update error:', error);
-            throw error; // Propagate error up
+            this.showError('Failed to update visualization: ' + error.message);
         }
     }
 
     handleResize() {
         const width = window.innerWidth;
         const height = window.innerHeight;
-        
+
         this.networkViz = new NetworkVisualization(
-            d3.select('#network'), 
-            width, 
+            d3.select('#network'),
+            width,
             height
         );
 
         // Re-render with current filters
-        this.handleUpdate(this.controls.getFilters()).catch(console.error);
-    }
+        const currentFilters = this.controls.getFilters();
+        if (currentFilters.orgFilter) {
+            this.handleUpdate(currentFilters).catch(console.error);
+        } else {
+            this.showWelcomeMessage();
+        }    }
 }
