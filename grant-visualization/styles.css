@@ -79,9 +79,9 @@ button:hover {
 input:invalid {
     border-color: #ef4444;
     animation: shake 0.5s;
-  }
+}
 
-  .tooltip {
+.tooltip {
     position: absolute;
     padding: 8px;
     background: rgba(0, 0, 0, 0.8);
@@ -94,13 +94,78 @@ input:invalid {
     font-size: 12px;
     max-width: 300px;
 }
-  
-  .tooltip.visible {
-    opacity: 1;
-  }
 
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
-  }
+.tooltip.visible {
+    opacity: 1;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-5px);
+    }
+
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+.slider-container {
+    position: relative;
+    padding: 10px 0;
+}
+
+.grant-slider {
+    width: 100%;
+    background: #1e293b;
+    -webkit-appearance: none;
+    height: 8px;
+    border-radius: 4px;
+    outline: none;
+}
+
+.grant-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #4299e1;
+    cursor: pointer;
+}
+
+.grant-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #4299e1;
+    cursor: pointer;
+    border: none;
+}
+
+.slider-value {
+    color: white;
+    margin-top: 8px;
+    font-size: 0.9em;
+}
+
+.amount-input-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.amount-input {
+    width: 120px;
+    padding: 4px;
+    background: #1e293b;
+    color: white;
+    border: 1px solid #475569;
+    border-radius: 4px;
+}

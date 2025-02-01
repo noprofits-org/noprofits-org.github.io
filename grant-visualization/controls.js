@@ -106,6 +106,8 @@ export class Controls {
         const matchingOrgs = document.getElementById('matchingOrgs');
         const updateViewBtn = document.getElementById('updateViewBtn');
         const generateBtn = document.getElementById('generateBtn');
+        const minAmountSlider = document.getElementById('minAmount');
+        const minAmountDisplay = document.getElementById('minAmountDisplay');
 
         let searchTimeout;
         const handleSearch = (e) => {
@@ -157,10 +159,61 @@ export class Controls {
             this.addListener(generateBtn, 'click', () => this.triggerUpdate());
         }
 
-        ['minAmount', 'maxOrgs', 'depth'].forEach(id => {
+        // Handle the minimum amount slider
+        if (minAmountSlider && minAmountDisplay) {
+            const minAmountInput = document.getElementById('minAmountInput');
+            this.addListener(minAmountSlider, 'input', (e) => {
+                const dollarValue = this.convertSliderToDollars(e.target.value);
+                minAmountDisplay.textContent = this.formatDollarAmount(dollarValue);
+                if (minAmountInput) {
+                    minAmountInput.value = dollarValue;
+                }
+                this.triggerUpdate();
+            });
+            
+            if (minAmountInput) {
+                this.addListener(minAmountInput, 'input', (e) => {
+                    let value = parseInt(e.target.value);
+                    if (isNaN(value)) value = 0;
+                    value = Math.min(100000000, Math.max(0, value));
+                    
+                    // Update display
+                    minAmountDisplay.textContent = this.formatDollarAmount(value);
+                    
+                    // Update slider position
+                    const sliderValue = this.convertDollarsToSlider(value);
+                    minAmountSlider.value = sliderValue;
+                    
+                    this.triggerUpdate();
+                });
+        
+                // Handle when input loses focus - cleanup invalid values
+                this.addListener(minAmountInput, 'blur', (e) => {
+                    let value = parseInt(e.target.value);
+                    if (isNaN(value)) value = 0;
+                    value = Math.min(100000000, Math.max(0, value));
+                    e.target.value = value;
+                    minAmountDisplay.textContent = this.formatDollarAmount(value);
+                });
+            }
+        }
+
+        // Handle other numeric inputs
+        ['maxOrgs', 'depth'].forEach(id => {
             const input = document.getElementById(id);
             if (input) {
                 this.addListener(input, 'change', () => this.validateInputs());
+            }
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            if (event.reason && event.reason.toString().includes('timeout')) {
+                this.enableControls();
+                const status = document.getElementById('status');
+                if (status) {
+                    status.textContent = 'Operation timed out. Please try again.';
+                    status.style.color = 'orange';
+                }
             }
         });
 
@@ -233,7 +286,7 @@ export class Controls {
 
         return {
             orgFilter: document.getElementById('orgFilter').value.trim(),
-            minAmount: Math.max(0, parseFloat(document.getElementById('minAmount').value) || 0),
+            minAmount: this.convertSliderToDollars(document.getElementById('minAmount').value),
             maxOrgs: Math.min(100, Math.max(1, parseInt(document.getElementById('maxOrgs').value) || 10)),
             selectedYears: selectedYears,
             depth: Math.min(5, Math.max(1, parseInt(document.getElementById('depth').value) || 2))
@@ -393,5 +446,21 @@ export class Controls {
             });
         });
         this.eventListeners.clear();
+    }
+
+    convertSliderToDollars(sliderValue) {
+        if (sliderValue == 0) return 0;
+        return Math.floor(Math.exp(Math.log(100000000) * sliderValue / 100));
+    }
+
+    convertDollarsToSlider(dollarValue) {
+        if (dollarValue <= 0) return 0;
+        return Math.min(100, Math.floor((Math.log(dollarValue) / Math.log(100000000)) * 100));
+    }
+
+    formatDollarAmount(amount) {
+        return '$' + amount.toLocaleString('en-US', {
+            maximumFractionDigits: 0
+        });
     }
 }
