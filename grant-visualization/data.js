@@ -7,52 +7,48 @@ export class DataManager {
         this.edgeAccumulator = {};
         this.totalCharitiesCount = 0;
         this.totalGrantsCount = 0;
+        this.filterCache = new Map();
     }
 
     async loadData() {
-        if (this.originalData) {
-            console.log("Returning cached data");
-            return this.originalData;
-        }
+        if (this.originalData) return this.originalData;
 
         try {
-            console.log("Loading zipped data files...");
-
             // Load charities first
             const charitiesZipBuf = await fetch('./charities.csv.zip').then(r => r.arrayBuffer());
             const charitiesZip = await JSZip.loadAsync(charitiesZipBuf);
-            const charitiesCsvString = await charitiesZip.file('charities_truncated.csv').async('string');
+            const charitiesCsvString = await charitiesZip.file('charities_truncated.csv').async('string');  // Updated filename
 
+            // Parse charities data
             await new Promise((resolve, reject) => {
                 Papa.parse(charitiesCsvString, {
                     header: true,
                     skipEmptyLines: true,
                     complete: results => {
                         results.data.forEach(row => {
-                            const ein = (row['filer_ein'] || '').trim();
-                            if (!ein) return;
-                            let rAmt = parseInt((row['receipt_amt'] || '0').trim(), 10);
-                            if (isNaN(rAmt)) rAmt = 0;
-                            this.charities[ein] = {
-                                name: (row['filer_name'] || '').trim(),
-                                receipt_amt: rAmt,
-                                govt_amt: parseInt((row['govt_amt'] || '0').trim(), 10) || 0,
-                                contrib_amt: parseInt((row['contrib_amt'] || '0').trim(), 10) || 0,
-                                grant_amt: 0 // gets accumulated from grants
+                            if (!row.filer_ein) return;
+
+                            this.charities[row.filer_ein] = {
+                                name: (row.filer_name || '').trim(),
+                                receipt_amt: parseInt(row.receipt_amt || 0),
+                                govt_amt: parseInt(row.govt_amt || 0),
+                                contrib_amt: parseInt(row.contrib_amt || 0),
+                                grant_amt: 0
                             };
                         });
                         this.totalCharitiesCount = Object.keys(this.charities).length;
                         resolve();
                     },
-                    error: err => reject(err)
+                    error: reject
                 });
             });
 
-            // Then load and process grants
+            // Load grants data
             const grantsZipBuf = await fetch('./grants.csv.zip').then(r => r.arrayBuffer());
             const grantsZip = await JSZip.loadAsync(grantsZipBuf);
-            const grantsCsvString = await grantsZip.file('grants_truncated.csv').async('string');
+            const grantsCsvString = await grantsZip.file('grants_truncated.csv').async('string');  // Updated filename
 
+            // Parse grants data            
             await new Promise((resolve, reject) => {
                 Papa.parse(grantsCsvString, {
                     header: true,
@@ -60,30 +56,26 @@ export class DataManager {
                     complete: results => {
                         let count = 0;
                         results.data.forEach(row => {
-                            const filer = (row['filer_ein'] || '').trim();
-                            const grantee = (row['grant_ein'] || '').trim();
-                            let amt = parseInt((row['grant_amt'] || '0').trim(), 10);
-                            if (isNaN(amt)) amt = 0;
+                            if (!row.filer_ein || !row.grant_ein) return;
+                            const tax_year = parseInt(row.tax_year) || new Date().getFullYear();
+                            const amt = parseInt(row.grant_amt || 0);
                             count++;
-
-                            if (this.charities[filer] && this.charities[grantee]) {
-                                const key = filer + '~' + grantee;
-                                if (!this.edgeAccumulator[key]) this.edgeAccumulator[key] = 0;
-                                this.edgeAccumulator[key] += amt;
-                                this.charities[filer].grant_amt += amt;
+                        
+                            if (this.charities[row.filer_ein] && this.charities[row.grant_ein]) {
+                                const key = `${row.filer_ein}~${row.grant_ein}~${tax_year}`;
+                                if (!this.edgeAccumulator[key]) this.edgeAccumulator[key] = { grant_amt: 0, tax_year };
+                                this.edgeAccumulator[key].grant_amt += amt;
+                                this.charities[row.filer_ein].grant_amt += amt;
                             }
                         });
                         this.totalGrantsCount = count;
                         resolve();
                     },
-                    error: err => reject(err)
+                    error: reject
                 });
             });
 
-            // Build lookup table for search
             this.buildOrgLookup();
-
-            // Format data for visualization compatibility
             this.originalData = {
                 charities: Object.entries(this.charities).map(([ein, data]) => ({
                     filer_ein: ein,
@@ -93,12 +85,13 @@ export class DataManager {
                     contrib_amt: data.contrib_amt,
                     grant_amt: data.grant_amt
                 })),
-                grants: Object.entries(this.edgeAccumulator).map(([key, amt]) => {
-                    const [filer, grantee] = key.split('~');
+                grants: Object.entries(this.edgeAccumulator).map(([key, value]) => {
+                    const [filer, grantee, tax_year] = key.split('~');
                     return {
                         filer_ein: filer,
                         grant_ein: grantee,
-                        grant_amt: amt
+                        grant_amt: value.grant_amt,
+                        tax_year: parseInt(tax_year)
                     };
                 })
             };
@@ -106,9 +99,20 @@ export class DataManager {
             return this.originalData;
 
         } catch (error) {
-            console.error('Error loading data:', error);
             throw new Error(`Failed to load data: ${error.message}`);
         }
+    }
+
+    async loadCharitiesData() {
+        const zipBuf = await fetch('./charities.csv.zip').then(r => r.arrayBuffer());
+        const zip = await JSZip.loadAsync(zipBuf);
+        return zip.file('charities_truncated.csv').async('string');
+    }
+
+    async loadGrantsData() {
+        const zipBuf = await fetch('./grants.csv.zip').then(r => r.arrayBuffer());
+        const zip = await JSZip.loadAsync(zipBuf);
+        return zip.file('grants_truncated.csv').async('string');
     }
 
     validateData(charities, grants) {
@@ -180,40 +184,43 @@ export class DataManager {
     }
 
     filterData(filters) {
-        const { minAmount, maxOrgs, orgFilter, depth } = filters;
-
-        if (!orgFilter || !this.originalData) {
-            return this.getEmptyResult();
-        }
-
-        // Depth is now always >= 1, so no need for depth === 0 logic
+        const { minAmount, maxOrgs, orgFilter, depth, selectedYears } = filters;
+        
+        // Initialize tracking structures
         const connected = new Map([[orgFilter, 0]]);
-        const allValidGrants = this.originalData.grants.filter(g =>
-            parseFloat(g.grant_amt) >= minAmount
-        );
-
-        // BFS through the graph up to specified depth
         let frontier = new Set([orgFilter]);
         let currentDepth = 0;
         let filteredGrants = new Set();
 
+        // First, verify the organization exists
+        if (!this.charities[orgFilter]) {
+            console.warn('Organization not found:', orgFilter);
+            return this.createEmptyResult(orgFilter);
+        }
+
+        // BFS through the graph up to specified depth
         while (currentDepth < depth && frontier.size > 0) {
             const newFrontier = new Set();
 
-            allValidGrants.forEach(grant => {
-                if (frontier.has(grant.filer_ein)) {
-                    if (!connected.has(grant.grant_ein)) {
-                        connected.set(grant.grant_ein, currentDepth + 1);
-                        newFrontier.add(grant.grant_ein);
-                    }
-                    filteredGrants.add(grant);
+            this.originalData.grants.forEach(grant => {
+                // Skip if amount is too small
+                if (parseFloat(grant.grant_amt) < minAmount) return;
+                if (!selectedYears.includes(grant.tax_year)) return;
+                // Check connections to current frontier
+                const isConnected = frontier.has(grant.filer_ein) || frontier.has(grant.grant_ein);
+                if (!isConnected) return;
+
+                // Add to filtered grants if it passes all criteria
+                filteredGrants.add(grant);
+
+                // Update frontiers and connected organizations
+                if (frontier.has(grant.filer_ein) && !connected.has(grant.grant_ein)) {
+                    connected.set(grant.grant_ein, currentDepth + 1);
+                    newFrontier.add(grant.grant_ein);
                 }
-                if (frontier.has(grant.grant_ein)) {
-                    if (!connected.has(grant.filer_ein)) {
-                        connected.set(grant.filer_ein, currentDepth + 1);
-                        newFrontier.add(grant.filer_ein);
-                    }
-                    filteredGrants.add(grant);
+                if (frontier.has(grant.grant_ein) && !connected.has(grant.filer_ein)) {
+                    connected.set(grant.filer_ein, currentDepth + 1);
+                    newFrontier.add(grant.filer_ein);
                 }
             });
 
@@ -222,8 +229,14 @@ export class DataManager {
         }
 
         const grantsArray = Array.from(filteredGrants);
+
+        if (grantsArray.length === 0) {
+            return this.createEmptyResult(orgFilter);
+        }
+
+        // Limit to top organizations
         const adjustedMaxOrgs = maxOrgs - 1;
-        const { filteredGrants: finalGrants, topOrgs, stats } =
+        const { filteredGrants: finalGrants, topOrgs } = 
             this.limitToTopOrgsWithRoot(grantsArray, adjustedMaxOrgs, orgFilter);
 
         return {
@@ -231,12 +244,45 @@ export class DataManager {
             orgs: topOrgs,
             connected,
             stats: {
-                ...stats,
-                totalCharities: this.totalCharitiesCount,
+                orgCount: topOrgs.size,
+                grantCount: finalGrants.length,
+                totalGrants: this.totalGrantsCount
+            },
+            filters: filters
+        };
+    }
+
+    createEmptyResult(orgFilter) {
+        return {
+            grants: [],
+            orgs: new Set([orgFilter]),
+            connected: new Map([[orgFilter, 0]]),
+            stats: {
+                orgCount: 1,
+                grantCount: 0,
                 totalGrants: this.totalGrantsCount
             }
         };
     }
+
+    checkOrganization(ein) {
+
+        // Check if org exists in charities
+        const charity = this.charities[ein];
+
+        // Count grants where org is filer
+        const grantsAsFiler = this.originalData.grants.filter(g => g.filer_ein === ein);
+
+        // Count grants where org is recipient
+        const grantsAsRecipient = this.originalData.grants.filter(g => g.grant_ein === ein);
+
+        return {
+            exists: !!charity,
+            grantsGiven: grantsAsFiler.length,
+            grantsReceived: grantsAsRecipient.length
+        };
+    }
+
 
     createResult(grants, orgs, connected) {
         return {
@@ -269,24 +315,26 @@ export class DataManager {
 
         // Get top orgs by volume (excluding root)
         const topOrgs = new Set([rootEIN]); // Start with root
-        Array.from(orgVolume.entries())
+        const sortedOrgs = Array.from(orgVolume.entries())
             .sort((a, b) => b[1] - a[1])
-            .slice(0, maxOrgs)
-            .forEach(([ein]) => topOrgs.add(ein));
+            .slice(0, maxOrgs);
+        sortedOrgs.forEach(([ein]) => topOrgs.add(ein));
 
         // Filter grants to only include connections with top orgs
-        const finalGrants = grants.filter(grant =>
-            (grant.filer_ein === rootEIN || topOrgs.has(grant.filer_ein)) &&
-            (grant.grant_ein === rootEIN || topOrgs.has(grant.grant_ein))
-        );
+        const finalGrants = grants.filter(grant => {
+            const includeGrant = (grant.filer_ein === rootEIN || topOrgs.has(grant.filer_ein)) &&
+                (grant.grant_ein === rootEIN || topOrgs.has(grant.grant_ein));
+            if (includeGrant) {
+            }
+            return includeGrant;
+        });
 
         return {
             filteredGrants: finalGrants,
             topOrgs,
             stats: {
                 orgCount: topOrgs.size,
-                grantCount: finalGrants.length,
-                totalGrants: grants.length
+                grantCount: finalGrants.length
             }
         };
     }
@@ -349,6 +397,19 @@ export class DataManager {
                 ein: typeof value === 'string' ? value : key,
                 name: this.orgLookup.get(value) || 'Unknown Organization'
             }));
+    }
+
+    getAvailableYears(ein) {
+        if (!ein) return [2023, 2022, 2021]; 
+        
+        const years = new Set();
+        this.originalData.grants.forEach(grant => {
+            if ((grant.filer_ein === ein || grant.grant_ein === ein) && grant.tax_year) {
+                years.add(parseInt(grant.tax_year));
+            }
+        });
+        const yearsArray = Array.from(years).sort((a, b) => b - a);
+        return yearsArray.length > 0 ? yearsArray : [2023, 2022, 2021]; // Fallback to defaults
     }
 
     getOrgDetails(ein) {

@@ -1,4 +1,3 @@
-// main.js
 import { DataManager } from './data.js';
 import { NetworkVisualization } from './network.js';
 import { Controls } from './controls.js';
@@ -12,7 +11,6 @@ export class GrantVisualizer {
     }
 
     async initialize() {
-        console.log("Starting initialization...");
         try {
             // Load initial data but don't visualize yet
             await this.dataManager.loadData();
@@ -22,11 +20,9 @@ export class GrantVisualizer {
             const width = window.innerWidth;
             const height = window.innerHeight;
 
-            console.log("Creating network visualization...");
             this.networkViz = new NetworkVisualization(svg, width, height);
 
             // Initialize controls
-            console.log("Initializing controls...");
             this.controls = new Controls(this.dataManager, this.handleUpdate.bind(this));
 
             // Display initial message
@@ -73,7 +69,6 @@ export class GrantVisualizer {
                 return;
             }
 
-            // Process data with filters
             const filteredData = this.dataManager.filterData(filters);
 
             // Update stats display

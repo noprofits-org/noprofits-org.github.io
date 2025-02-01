@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Nonprofit Grant Flow Network</title>
@@ -11,24 +12,29 @@
             color: white;
             font-family: sans-serif;
         }
+
         #controls {
             position: fixed;
             top: 70px;
             left: 10px;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0, 0, 0, 0.8);
             padding: 15px;
             border-radius: 4px;
             z-index: 1000;
             max-width: 300px;
         }
+
         .control-group {
             margin-bottom: 10px;
         }
+
         label {
             display: block;
             margin-bottom: 5px;
         }
-        input[type="number"], input[type="text"] {
+
+        input[type="number"],
+        input[type="text"] {
             width: 100%;
             padding: 5px;
             margin-bottom: 10px;
@@ -37,6 +43,7 @@
             border: 1px solid #475569;
             border-radius: 4px;
         }
+
         select {
             width: 100%;
             padding: 5px;
@@ -46,6 +53,7 @@
             border: 1px solid #475569;
             border-radius: 4px;
         }
+
         button {
             background: #4299e1;
             color: white;
@@ -55,26 +63,31 @@
             cursor: pointer;
             width: 100%;
         }
+
         button:hover {
             background: #3182ce;
         }
+
         #stats {
             margin-top: 10px;
             font-size: 0.9em;
         }
+
         .legend {
             position: fixed;
             bottom: 10px;
             left: 10px;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0, 0, 0, 0.8);
             padding: 15px;
             border-radius: 4px;
             font-size: 0.9em;
         }
     </style>
 </head>
+
 <body>
-    <div id="citation" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 10px; border-radius: 4px; z-index: 1000;">
+    <div id="citation"
+        style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 10px; border-radius: 4px; z-index: 1000;">
         Data sourced from joeisdone.github.io/charity (accessed January 2025)
     </div>
     <div id="controls">
@@ -83,22 +96,28 @@
             <input type="text" id="orgFilter" placeholder="Enter EIN or organization name">
             <select id="matchingOrgs" size="3" style="display: none;"></select>
         </div>
-        <div class="control-group">
-            <label>Connection Depth:</label>
-            <input type="number" id="depth" value="1" min="1" max="5">
+        <div id="yearFilterContainer">
+            <label>Filter by Grant Years:</label>
+            <div id="yearCheckboxes"></div>
         </div>
         <div class="control-group">
             <label>Minimum Grant Amount ($):</label>
             <input type="number" id="minAmount" value="10000">
         </div>
         <div class="control-group">
+            <label>Connection Depth:</label>
+            <input type="number" id="depth" value="1" min="1" max="5">
+        </div>
+        <div class="control-group">
             <label>Max Organizations to Show:</label>
             <input type="number" id="maxOrgs" value="14">
         </div>
         <button id="updateViewBtn">Update View</button>
-            <div id="stats"></div>
+        <div id="stats"></div>
     </div>
-    
+
+    <div id="tooltip" class="tooltip"></div>
+
     <div class="legend">
         <div style="margin-bottom: 10px;">
             <strong>Node Colors by Depth:</strong><br>
@@ -123,11 +142,11 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    
+
     <!-- Then load our modules -->
     <script type="module">
         import { GrantVisualizer } from './main.js';
-        
+
         // Wait for DOM and D3
         window.addEventListener('DOMContentLoaded', () => {
             if (window.d3) {
@@ -152,4 +171,5 @@
         });
     </script>
 </body>
+
 </html>

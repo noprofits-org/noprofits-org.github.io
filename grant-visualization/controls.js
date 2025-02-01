@@ -1,11 +1,104 @@
 // controls.js
+const DEBOUNCE_DELAY = 300;
+
 export class Controls {
     constructor(dataManager, onUpdate) {
-        this.dataManager = dataManager;
-        this.onUpdate = onUpdate;
-        this.eventListeners = new Map();
-        this.setupEventListeners();
-        this.setupInputValidation();
+
+        try {
+            if (!dataManager) {
+                throw new Error("DataManager is required");
+            }
+            if (!onUpdate || typeof onUpdate !== 'function') {
+                throw new Error("onUpdate callback is required and must be a function");
+            }
+
+            this.dataManager = dataManager;
+            this.onUpdate = onUpdate;
+            this.eventListeners = new Map();
+
+            this.setupEventListeners();
+            this.setupInputValidation();
+            this.addExportButton();
+            this.setupYearCheckboxes();
+
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    setupYearCheckboxes(currentOrg = '') {
+        try {
+            // Ensure container exists
+            let container = document.getElementById('yearCheckboxes');
+            const controlsDiv = document.getElementById('controls');
+
+            if (!container) {
+                console.warn('Year checkboxes container not found, creating it...');
+                const yearFilterContainer = document.createElement('div');
+                yearFilterContainer.id = 'yearFilterContainer';
+                yearFilterContainer.innerHTML = `
+                    <label>Filter by Grant Years:</label>
+                    <div id="yearCheckboxes"></div>
+                `;
+                // Insert after org filter
+                const orgFilterGroup = controlsDiv.querySelector('.control-group');
+                if (orgFilterGroup) {
+                    controlsDiv.insertBefore(yearFilterContainer, orgFilterGroup.nextSibling);
+                } else {
+                    controlsDiv.insertBefore(yearFilterContainer, controlsDiv.firstChild);
+                }
+                container = document.getElementById('yearCheckboxes');
+            }
+
+            // Get available years from DataManager
+            let availableYears = this.dataManager.getAvailableYears(currentOrg);
+
+            // Ensure we have at least the last 3 years if empty
+            if (availableYears.length === 0) {
+                const currentYear = new Date().getFullYear();
+                availableYears = [currentYear, currentYear - 1, currentYear - 2];
+            }
+
+
+
+            // Clear and rebuild checkboxes
+            container.innerHTML = '';
+            availableYears.sort().reverse().forEach(year => {
+                const label = document.createElement('label');
+                label.className = 'year-checkbox-label';
+                label.style.marginRight = '15px';
+                label.innerHTML = `
+                    <input type="checkbox" 
+                           name="yearFilter" 
+                           value="${year}" 
+                           ${this.getDefaultYearState(year) ? 'checked' : ''}>
+                    ${year}
+                `;
+                container.appendChild(label);
+            });
+
+            // Add event listeners
+            container.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                this.addListener(checkbox, 'change', () => {
+                    this.triggerUpdate();
+                });
+            });
+
+            // Show container
+            const filterContainer = document.getElementById('yearFilterContainer');
+            if (filterContainer) {
+                filterContainer.style.display = 'block';
+            }
+
+        } catch (error) {
+            console.error("Error setting up year checkboxes:", error);
+        }
+    }
+
+    // Add to Controls class
+    getDefaultYearState(year) {
+        const currentYear = new Date().getFullYear();
+        return year >= currentYear - 2;
     }
 
     setupEventListeners() {
@@ -16,16 +109,23 @@ export class Controls {
 
         let searchTimeout;
         const handleSearch = (e) => {
+            const searchEl = e.target;
+            searchEl.classList.add('search-loading');
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                const matches = this.dataManager.searchOrganizations(e.target.value);
+                const matches = this.dataManager.searchOrganizations(searchEl.value);
                 this.updateOrgSearchResults(matches);
+                searchEl.classList.remove('search-loading');
+                // Update year checkboxes when org changes
+                this.setupYearCheckboxes(searchEl.value.trim());
             }, 300);
         };
 
         const handleOrgSelect = (option) => {
             orgFilter.value = option.value;
             matchingOrgs.style.display = 'none';
+            // Update year checkboxes before triggering update
+            this.setupYearCheckboxes(option.value);
             this.triggerUpdate();
         };
 
@@ -66,7 +166,6 @@ export class Controls {
 
         window.addEventListener('unhandledrejection', (event) => {
             if (event.reason && event.reason.toString().includes('timeout')) {
-                console.log('Recovering from timeout...');
                 this.enableControls();
                 const status = document.getElementById('status');
                 if (status) {
@@ -79,7 +178,6 @@ export class Controls {
 
     addListener(element, event, handler) {
         if (!element) {
-            console.warn(`Element not found for event: ${event}`);
             return;
         }
 
@@ -123,24 +221,148 @@ export class Controls {
     }
 
     getFilters() {
+        const selectedYears = Array.from(
+            document.querySelectorAll('input[name="yearFilter"]:checked')
+        ).map(el => parseInt(el.value));
+
+        // If no years selected, use available years or defaults
+        if (selectedYears.length === 0) {
+            const currentOrg = document.getElementById('orgFilter').value.trim();
+            selectedYears.push(...this.dataManager.getAvailableYears(currentOrg));
+        }
+
         return {
+            orgFilter: document.getElementById('orgFilter').value.trim(),
             minAmount: Math.max(0, parseFloat(document.getElementById('minAmount').value) || 0),
             maxOrgs: Math.min(100, Math.max(1, parseInt(document.getElementById('maxOrgs').value) || 10)),
-            orgFilter: document.getElementById('orgFilter').value.trim(),
+            selectedYears: selectedYears,
             depth: Math.min(5, Math.max(1, parseInt(document.getElementById('depth').value) || 2))
         };
+    }
+
+    triggerUpdate() {
+        if (this.updateTimeout) clearTimeout(this.updateTimeout);
+        this.updateTimeout = setTimeout(() => {
+            const filters = this.getFilters();
+            this.onUpdate(filters);
+        }, DEBOUNCE_DELAY);
+    }
+
+    addExportButton() {
+        const exportBtn = document.createElement('button');
+        exportBtn.textContent = 'Export Visualization';
+        exportBtn.addEventListener('click', () => this.exportVisualization());
+        document.getElementById('controls').appendChild(exportBtn);
+    }
+
+    updateYearFilters(availableYears) {
+        const container = document.getElementById('yearCheckboxes');
+        if (!container) {
+            return;
+        }
+
+        container.innerHTML = '';
+
+        availableYears.forEach(year => {
+            const label = document.createElement('label');
+            label.className = 'year-checkbox-label';
+            label.innerHTML = `
+                <input type="checkbox" name="yearFilter" value="${year}" checked>
+                ${year}
+            `;
+            container.appendChild(label);
+        });
+
+        // Show the container and add change event listeners
+        const filterContainer = document.getElementById('yearFilterContainer');
+        if (filterContainer) {
+            filterContainer.style.display = 'block';
+
+            // Add event listeners to checkboxes
+            container.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                this.addListener(checkbox, 'change', () => {
+                    const selectedYears = this.getFilters().selectedYears;
+                    this.triggerUpdate();
+                });
+            });
+        }
     }
 
     updateStats(stats) {
         const statsEl = document.getElementById('stats');
         if (!statsEl) return;
 
+        // Format numbers with commas
+        const formatNumber = num => num.toLocaleString();
+
         statsEl.innerHTML = `
             <strong>Statistics:</strong><br>
-            Showing ${stats.orgCount.toLocaleString()} organizations<br>
-            ${stats.grantCount.toLocaleString()} grants visible<br>
-            Total grants in dataset: ${stats.totalGrants.toLocaleString()}
+            Showing ${formatNumber(stats.orgCount)} organization${stats.orgCount !== 1 ? 's' : ''}<br>
+            ${formatNumber(stats.grantCount)} grant${stats.grantCount !== 1 ? 's' : ''} visible<br>
+            Total grants in dataset: ${formatNumber(stats.totalGrants)}
         `;
+    }
+
+    setupYearInputs() {
+        const currentYear = new Date().getFullYear();
+        const minYearInput = document.getElementById('minYear');
+        const maxYearInput = document.getElementById('maxYear');
+
+        if (minYearInput && !minYearInput.value) {
+            minYearInput.value = 2000; // Default minimum year
+        }
+        if (maxYearInput && !maxYearInput.value) {
+            maxYearInput.value = currentYear; // Default to current year
+        }
+    }
+
+    exportVisualization() {
+        // Get current settings
+        const settings = {
+            orgFilter: document.getElementById('orgFilter').value,
+            minAmount: document.getElementById('minAmount').value,
+            maxOrgs: document.getElementById('maxOrgs').value,
+            depth: document.getElementById('depth').value,
+            selectedYears: Array.from(document.querySelectorAll('input[name="yearFilter"]:checked'))
+                .map(cb => cb.value)
+        };
+
+        // Create a composite canvas with visualization and settings
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Get the SVG data
+        const svgData = new XMLSerializer().serializeToString(this.svg.node());
+        const img = new Image();
+
+        img.onload = () => {
+            // Set canvas size to accommodate both image and settings
+            canvas.width = img.width;
+            canvas.height = img.height + 100; // Extra space for settings
+
+            // Draw visualization
+            ctx.fillStyle = '#0f172a'; // Match background color
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+
+            // Draw settings
+            ctx.fillStyle = 'white';
+            ctx.font = '12px sans-serif';
+            let y = img.height + 20;
+            ctx.fillText(`Organization: ${settings.orgFilter}`, 10, y);
+            ctx.fillText(`Min Amount: $${settings.minAmount}`, 10, y + 20);
+            ctx.fillText(`Max Orgs: ${settings.maxOrgs}`, 10, y + 40);
+            ctx.fillText(`Depth: ${settings.depth}`, 10, y + 60);
+            ctx.fillText(`Years: ${settings.selectedYears.join(', ')}`, 10, y + 80);
+
+            // Create download link
+            const link = document.createElement('a');
+            link.download = 'grant-visualization.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        };
+
+        img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
     }
 
     validateInputs() {
@@ -162,11 +384,6 @@ export class Controls {
             value = Math.max(constraints.min, Math.min(constraints.max, value));
             el.value = value;
         });
-    }
-
-    triggerUpdate() {
-        const filters = this.getFilters();
-        this.onUpdate(filters);
     }
 
     destroy() {

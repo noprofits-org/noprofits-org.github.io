@@ -75,3 +75,32 @@ button:hover {
     border-radius: 4px;
     font-size: 0.9em;
 }
+
+input:invalid {
+    border-color: #ef4444;
+    animation: shake 0.5s;
+  }
+
+  .tooltip {
+    position: absolute;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 4px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 1000;
+    font-size: 12px;
+    max-width: 300px;
+}
+  
+  .tooltip.visible {
+    opacity: 1;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
