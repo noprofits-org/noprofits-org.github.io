@@ -170,23 +170,23 @@ export class Controls {
                 }
                 this.triggerUpdate();
             });
-            
+
             if (minAmountInput) {
                 this.addListener(minAmountInput, 'input', (e) => {
                     let value = parseInt(e.target.value);
                     if (isNaN(value)) value = 0;
                     value = Math.min(100000000, Math.max(0, value));
-                    
+
                     // Update display
                     minAmountDisplay.textContent = this.formatDollarAmount(value);
-                    
+
                     // Update slider position
                     const sliderValue = this.convertDollarsToSlider(value);
                     minAmountSlider.value = sliderValue;
-                    
+
                     this.triggerUpdate();
                 });
-        
+
                 // Handle when input loses focus - cleanup invalid values
                 this.addListener(minAmountInput, 'blur', (e) => {
                     let value = parseInt(e.target.value);
@@ -304,8 +304,14 @@ export class Controls {
     addExportButton() {
         const exportBtn = document.createElement('button');
         exportBtn.textContent = 'Export Visualization';
-        exportBtn.addEventListener('click', () => this.exportVisualization());
-        document.getElementById('controls').appendChild(exportBtn);
+        exportBtn.id = 'exportBtn';
+        exportBtn.className = 'export-button';
+
+        const controlsDiv = document.getElementById('controls');
+        if (controlsDiv) {
+            controlsDiv.appendChild(exportBtn);
+            this.addListener(exportBtn, 'click', () => this.exportVisualization());
+        }
     }
 
     updateYearFilters(availableYears) {
@@ -345,14 +351,26 @@ export class Controls {
         const statsEl = document.getElementById('stats');
         if (!statsEl) return;
 
+        // Store current stats for use in export
+        this.currentStats = stats;
+
         // Format numbers with commas
         const formatNumber = num => num.toLocaleString();
+        const formatCurrency = num => new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(num);
 
         statsEl.innerHTML = `
-            <strong>Statistics:</strong><br>
-            Showing ${formatNumber(stats.orgCount)} organization${stats.orgCount !== 1 ? 's' : ''}<br>
-            ${formatNumber(stats.grantCount)} grant${stats.grantCount !== 1 ? 's' : ''} visible<br>
-            Total grants in dataset: ${formatNumber(stats.totalGrants)}
+            <strong>Statistics</strong><br>
+            Organizations: ${formatNumber(stats.orgCount)}<br>
+            Grants Visualized: ${formatNumber(stats.grantCount)}<br>
+            Total Dataset Grants: ${formatNumber(stats.totalGrants)}<br>
+            Total Grant Amount: ${formatCurrency(stats.totalAmount)}<br>
+            Average Grant: ${formatCurrency(stats.averageAmount)}<br>
+            Standard Deviation: ${formatCurrency(stats.standardDeviation)}
         `;
     }
 
@@ -370,52 +388,106 @@ export class Controls {
     }
 
     exportVisualization() {
-        // Get current settings
-        const settings = {
-            orgFilter: document.getElementById('orgFilter').value,
-            minAmount: document.getElementById('minAmount').value,
-            maxOrgs: document.getElementById('maxOrgs').value,
-            depth: document.getElementById('depth').value,
-            selectedYears: Array.from(document.querySelectorAll('input[name="yearFilter"]:checked'))
-                .map(cb => cb.value)
+        // Get the SVG element
+        const svg = document.getElementById('network');
+        if (!svg) {
+            console.error('No SVG found');
+            return;
+        }
+
+        // Create a copy of the SVG
+        const svgCopy = svg.cloneNode(true);
+
+        // Set the background color to match the display
+        svgCopy.style.backgroundColor = '#0f172a';
+
+        // Format numbers for display
+        const formatNumber = (num) => new Intl.NumberFormat('en-US').format(Math.round(num));
+        const formatCurrency = (num) => new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(num);
+
+        // Create stats background and container
+        const statsGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        statsGroup.setAttribute('transform', 'translate(20, 20)');
+
+        const statsBackground = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        statsBackground.setAttribute('x', '-10');
+        statsBackground.setAttribute('y', '-10');
+        statsBackground.setAttribute('width', '400');
+        statsBackground.setAttribute('height', '180');
+        statsBackground.setAttribute('fill', 'rgba(0, 0, 0, 0.7)');
+        statsBackground.setAttribute('rx', '8');
+        statsGroup.appendChild(statsBackground);
+
+        // Function to add text line
+        const addTextLine = (content, y) => {
+            const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.textContent = content;
+            text.setAttribute('x', '0');
+            text.setAttribute('y', y);
+            text.setAttribute('fill', 'white');
+            text.setAttribute('font-family', 'sans-serif');
+            text.setAttribute('font-size', '14px');
+            return text;
         };
 
-        // Create a composite canvas with visualization and settings
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+        // Get current stats
+        const stats = this.currentStats || {};
 
-        // Get the SVG data
-        const svgData = new XMLSerializer().serializeToString(this.svg.node());
-        const img = new Image();
+        // Add title
+        const title = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        title.textContent = "Statistics";
+        title.setAttribute('x', '0');
+        title.setAttribute('y', '5');
+        title.setAttribute('fill', 'white');
+        title.setAttribute('font-family', 'sans-serif');
+        title.setAttribute('font-size', '16px');
+        title.setAttribute('font-weight', 'bold');
+        statsGroup.appendChild(title);
 
-        img.onload = () => {
-            // Set canvas size to accommodate both image and settings
-            canvas.width = img.width;
-            canvas.height = img.height + 100; // Extra space for settings
+        // Add statistics lines
+        const lines = [
+            `Organizations: ${formatNumber(stats.orgCount || 0)}`,
+            `Grants Visualized: ${formatNumber(stats.grantCount || 0)}`,
+            `Total Dataset Grants: ${formatNumber(stats.totalGrants || 0)}`,
+            `Total Grant Amount: ${formatCurrency(stats.totalAmount || 0)}`,
+            `Average Grant: ${formatCurrency(stats.averageAmount || 0)}`,
+            `Standard Deviation: ${formatCurrency(stats.standardDeviation || 0)}`
+        ];
 
-            // Draw visualization
-            ctx.fillStyle = '#0f172a'; // Match background color
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0);
+        lines.forEach((line, index) => {
+            statsGroup.appendChild(addTextLine(line, 30 + (index * 20)));
+        });
 
-            // Draw settings
-            ctx.fillStyle = 'white';
-            ctx.font = '12px sans-serif';
-            let y = img.height + 20;
-            ctx.fillText(`Organization: ${settings.orgFilter}`, 10, y);
-            ctx.fillText(`Min Amount: $${settings.minAmount}`, 10, y + 20);
-            ctx.fillText(`Max Orgs: ${settings.maxOrgs}`, 10, y + 40);
-            ctx.fillText(`Depth: ${settings.depth}`, 10, y + 60);
-            ctx.fillText(`Years: ${settings.selectedYears.join(', ')}`, 10, y + 80);
+        svgCopy.appendChild(statsGroup);
 
-            // Create download link
-            const link = document.createElement('a');
-            link.download = 'grant-visualization.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        };
+        // Add metadata
+        const filters = this.getFilters();
+        const metadata = document.createElementNS("http://www.w3.org/2000/svg", "metadata");
+        metadata.textContent = JSON.stringify({
+            ...filters,
+            timestamp: new Date().toISOString(),
+            stats: this.currentStats
+        });
+        svgCopy.appendChild(metadata);
 
-        img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+        // Convert and download
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(svgCopy);
+        const svgBlob = new Blob([svgString], { type: 'image/svg+xml' });
+
+        const link = document.createElement('a');
+        link.download = `grant-visualization-${new Date().toISOString().split('T')[0]}.svg`;
+        link.href = URL.createObjectURL(svgBlob);
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
     }
 
     validateInputs() {

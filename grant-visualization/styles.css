@@ -169,3 +169,24 @@ input:invalid {
     border: 1px solid #475569;
     border-radius: 4px;
 }
+
+.export-button {
+    background: #4299e1;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    width: 100%;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.export-button:hover {
+    background: #3182ce;
+}
+
+.export-button:active {
+    background: #2c5282;
+}

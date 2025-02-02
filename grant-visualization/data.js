@@ -60,7 +60,7 @@ export class DataManager {
                             const tax_year = parseInt(row.tax_year) || new Date().getFullYear();
                             const amt = parseInt(row.grant_amt || 0);
                             count++;
-                        
+
                             if (this.charities[row.filer_ein] && this.charities[row.grant_ein]) {
                                 const key = `${row.filer_ein}~${row.grant_ein}~${tax_year}`;
                                 if (!this.edgeAccumulator[key]) this.edgeAccumulator[key] = { grant_amt: 0, tax_year };
@@ -185,7 +185,7 @@ export class DataManager {
 
     filterData(filters) {
         const { minAmount, maxOrgs, orgFilter, depth, selectedYears } = filters;
-        
+
         // Initialize tracking structures
         const connected = new Map([[orgFilter, 0]]);
         let frontier = new Set([orgFilter]);
@@ -236,8 +236,10 @@ export class DataManager {
 
         // Limit to top organizations
         const adjustedMaxOrgs = maxOrgs - 1;
-        const { filteredGrants: finalGrants, topOrgs } = 
+        const { filteredGrants: finalGrants, topOrgs } =
             this.limitToTopOrgsWithRoot(grantsArray, adjustedMaxOrgs, orgFilter);
+
+        const detailedStats = this.calculateDetailedStats(finalGrants);
 
         return {
             grants: finalGrants,
@@ -246,7 +248,10 @@ export class DataManager {
             stats: {
                 orgCount: topOrgs.size,
                 grantCount: finalGrants.length,
-                totalGrants: this.totalGrantsCount
+                totalGrants: this.totalGrantsCount,
+                totalAmount: detailedStats.totalAmount,
+                averageAmount: detailedStats.averageAmount,
+                standardDeviation: detailedStats.standardDeviation
             },
             filters: filters
         };
@@ -400,8 +405,8 @@ export class DataManager {
     }
 
     getAvailableYears(ein) {
-        if (!ein) return [2023, 2022, 2021]; 
-        
+        if (!ein) return [2023, 2022, 2021];
+
         const years = new Set();
         this.originalData.grants.forEach(grant => {
             if ((grant.filer_ein === ein || grant.grant_ein === ein) && grant.tax_year) {
@@ -431,5 +436,50 @@ export class DataManager {
             const org = this.getOrgDetails(ein);
             return total + (org ? org.govtFunds : 0);
         }, 0);
+    }
+
+    calculateDetailedStats(grants) {
+        // Handle empty grants array
+        if (!grants || grants.length === 0) {
+            return {
+                grantCount: 0,
+                totalAmount: 0,
+                averageAmount: 0,
+                standardDeviation: 0
+            };
+        }
+
+        // Calculate grant amounts, filtering out invalid values
+        const grantAmounts = grants
+            .map(grant => parseFloat(grant.grant_amt))
+            .filter(amount => !isNaN(amount));
+
+        if (grantAmounts.length === 0) {
+            return {
+                grantCount: 0,
+                totalAmount: 0,
+                averageAmount: 0,
+                standardDeviation: 0
+            };
+        }
+
+        // Calculate basic statistics
+        const totalAmount = grantAmounts.reduce((sum, amt) => sum + amt, 0);
+        const averageAmount = totalAmount / grantAmounts.length;
+
+        // Calculate standard deviation
+        const squareDiffs = grantAmounts.map(value => {
+            const diff = value - averageAmount;
+            return diff * diff;
+        });
+        const avgSquareDiff = squareDiffs.reduce((sum, value) => sum + value, 0) / grantAmounts.length;
+        const standardDeviation = Math.sqrt(avgSquareDiff);
+
+        return {
+            grantCount: grants.length,
+            totalAmount: totalAmount,
+            averageAmount: averageAmount,
+            standardDeviation: standardDeviation
+        };
     }
 }
