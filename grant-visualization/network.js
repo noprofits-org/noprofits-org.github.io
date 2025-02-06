@@ -8,6 +8,7 @@ export class NetworkVisualization {
         this.maxValue = 1;
         this.sliderContainer = null;
         this.sliderHandle = null;
+        this.activeNode = null;
 
         // Enhanced zoom behavior
         this.zoom = d3.zoom()
@@ -30,6 +31,52 @@ export class NetworkVisualization {
         this.calculateLinkWidth = this.calculateLinkWidth.bind(this);
         this.tick = this.tick.bind(this);
         this.handleZoom = this.handleZoom.bind(this);
+    }
+
+    addGrantLabels(nodeId) {
+        // Remove existing grant labels first
+        this.container.selectAll(".grant-label").remove();
+
+        // If clicking the active node, just clear it and return
+        if (this.activeNode === nodeId) {
+            this.activeNode = null;
+            return;
+        }
+
+        this.activeNode = nodeId;
+
+        // Add labels for all links connected to this node
+        this.links.each((d, i, nodes) => {
+            // Only process links where this node is the target
+            if (d.target.id !== nodeId) return;
+
+            // Format the grant amount
+            const amount = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                maximumFractionDigits: 0
+            }).format(d.value);
+
+            // Get the specific path element for this link
+            const path = nodes[i];
+            const pathLength = path.getTotalLength();
+            const midPoint = path.getPointAtLength(pathLength * 0.6);
+
+            // Add the label with specific link reference
+            this.container.append("text")
+                .datum(d)  // Attach the link data
+                .attr("class", "grant-label")
+                .attr("data-link-index", i)
+                .attr("x", midPoint.x)
+                .attr("y", midPoint.y - 10)
+                .attr("text-anchor", "middle")
+                .attr("fill", "white")
+                .attr("font-size", "12px")
+                .attr("paint-order", "stroke")
+                .attr("stroke", "#0f172a")
+                .attr("stroke-width", "3px")
+                .text(amount);
+        });
     }
 
     addZoomControls() {
@@ -197,6 +244,7 @@ export class NetworkVisualization {
 
         return scale(Math.max(1, value));
     }
+
     createNodes(data, charities) {
         const nodes = new Map();
 
@@ -270,29 +318,35 @@ export class NetworkVisualization {
             node.y = centerY + radius * Math.sin(angle);
         });
 
+        // Add click handler to svg to clear labels when clicking background
+        this.svg.on("dblclick", () => {
+            this.container.selectAll(".grant-label").remove();
+            this.activeNode = null;
+        });
+
         // Create forces simulation
-    this.simulation = d3.forceSimulation(nodes)
-        .force("link", d3.forceLink(links)
-            .id(d => d.id)
-            .distance(d => {
-                // Base distance on node sizes
-                const sourceR = this.calculateNodeRadius(d.source);
-                const targetR = this.calculateNodeRadius(d.target);
-                return sourceR + targetR + 100; // Additional padding
-            }))
-        .force("charge", d3.forceManyBody()
-            .strength(d => -5000)) // Stronger repulsion
-        .force("collision", d3.forceCollide()
-            .radius(d => this.calculateNodeRadius(d) + 30)
-            .strength(1)) // Maximum collision strength
-        .force("radial", d3.forceRadial(
-            d => d.depth === 0 ? 0 : 300, // Root at center, others in orbit
-            this.width / 2,
-            this.height / 2
-        ).strength(0.8))
-        .velocityDecay(0.4) // More damping
-        .alphaDecay(0.01) // Slower cooling
-        .on("tick", this.tick);
+        this.simulation = d3.forceSimulation(nodes)
+            .force("link", d3.forceLink(links)
+                .id(d => d.id)
+                .distance(d => {
+                    // Base distance on node sizes
+                    const sourceR = this.calculateNodeRadius(d.source);
+                    const targetR = this.calculateNodeRadius(d.target);
+                    return sourceR + targetR + 100; // Additional padding
+                }))
+            .force("charge", d3.forceManyBody()
+                .strength(d => -5000)) // Stronger repulsion
+            .force("collision", d3.forceCollide()
+                .radius(d => this.calculateNodeRadius(d) + 30)
+                .strength(1)) // Maximum collision strength
+            .force("radial", d3.forceRadial(
+                d => d.depth === 0 ? 0 : 300, // Root at center, others in orbit
+                this.width / 2,
+                this.height / 2
+            ).strength(0.8))
+            .velocityDecay(0.4) // More damping
+            .alphaDecay(0.01) // Slower cooling
+            .on("tick", this.tick);
 
         // Container for zoom
         const container = this.svg.append("g");
@@ -314,7 +368,12 @@ export class NetworkVisualization {
             .data(nodes)
             .join("g")
             .attr("class", "node")
-            .call(this.createDragBehavior());
+            .call(this.createDragBehavior())
+            .on("dblclick", (event, d) => {
+                event.preventDefault();  // Prevent zoom behavior
+                event.stopPropagation(); // Stop event from bubbling up
+                this.addGrantLabels(d.id);
+            });
 
         // Add circles to nodes
         this.nodes.append("circle")
@@ -382,6 +441,24 @@ export class NetworkVisualization {
 
                 return `M${startX},${startY}L${endX},${endY}`;
             });
+
+            // Update grant label positions
+            if (this.activeNode) {
+                this.container.selectAll(".grant-label").each((d, i, nodes) => {
+                    const label = d3.select(nodes[i]);
+                    const linkIndex = label.attr("data-link-index");
+                    const links = this.links.nodes();  // Get all link elements
+                    const link = links[linkIndex];  // Get corresponding link
+                    if (!link) return;
+
+                    const pathLength = link.getTotalLength();
+                    const midPoint = link.getPointAtLength(pathLength * 0.6);
+
+                    label
+                        .attr("x", midPoint.x)
+                        .attr("y", midPoint.y - 10);
+                });
+            }
         });
 
         // Initial zoom to fit
@@ -501,6 +578,10 @@ export class NetworkVisualization {
                 .force("y", d3.forceY(height / 2).strength(0.1))
                 .alpha(1)
                 .restart();
+        }
+
+        if (this.activeNode) {
+            this.addGrantLabels(this.activeNode);
         }
     }
 
