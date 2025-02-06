@@ -186,34 +186,28 @@ export class DataManager {
     filterData(filters) {
         const { minAmount, maxOrgs, orgFilter, depth, selectedYears } = filters;
 
-        // Initialize tracking structures
-        const connected = new Map([[orgFilter, 0]]);
-        let frontier = new Set([orgFilter]);
-        let currentDepth = 0;
-        let filteredGrants = new Set();
-
         // First, verify the organization exists
         if (!this.charities[orgFilter]) {
             console.warn('Organization not found:', orgFilter);
             return this.createEmptyResult(orgFilter);
         }
 
-        // BFS through the graph up to specified depth
-        while (currentDepth < depth && frontier.size > 0) {
+        // Step 1: Filter grants by year and minimum amount first
+        const yearFilteredGrants = this.originalData.grants.filter(grant => 
+            parseFloat(grant.grant_amt) >= minAmount && 
+            selectedYears.includes(grant.tax_year)
+        );
+
+        // Step 2: Build connection map using only year-filtered grants
+        const connected = new Map([[orgFilter, 0]]);
+        let frontier = new Set([orgFilter]);
+        
+        // Iterate through each depth level
+        for (let currentDepth = 0; currentDepth < depth; currentDepth++) {
             const newFrontier = new Set();
-
-            this.originalData.grants.forEach(grant => {
-                // Skip if amount is too small
-                if (parseFloat(grant.grant_amt) < minAmount) return;
-                if (!selectedYears.includes(grant.tax_year)) return;
-                // Check connections to current frontier
-                const isConnected = frontier.has(grant.filer_ein) || frontier.has(grant.grant_ein);
-                if (!isConnected) return;
-
-                // Add to filtered grants if it passes all criteria
-                filteredGrants.add(grant);
-
-                // Update frontiers and connected organizations
+            
+            // Look for connections from current frontier
+            yearFilteredGrants.forEach(grant => {
                 if (frontier.has(grant.filer_ein) && !connected.has(grant.grant_ein)) {
                     connected.set(grant.grant_ein, currentDepth + 1);
                     newFrontier.add(grant.grant_ein);
@@ -223,31 +217,37 @@ export class DataManager {
                     newFrontier.add(grant.filer_ein);
                 }
             });
-
+            
             frontier = newFrontier;
-            currentDepth++;
+            if (frontier.size === 0) break;
         }
 
-        const grantsArray = Array.from(filteredGrants);
+        // Step 3: Filter grants to only those between connected organizations
+        const depthFilteredGrants = yearFilteredGrants.filter(grant => {
+            const sourceDepth = connected.get(grant.filer_ein);
+            const targetDepth = connected.get(grant.grant_ein);
+            
+            return sourceDepth !== undefined && 
+                   targetDepth !== undefined && 
+                   Math.abs(sourceDepth - targetDepth) === 1;
+        });
 
-        if (grantsArray.length === 0) {
-            return this.createEmptyResult(orgFilter);
-        }
+        // Step 4: Apply organization limit while ensuring root is included
+        const { filteredGrants, topOrgs } = this.limitToTopOrgsWithRoot(
+            depthFilteredGrants, 
+            maxOrgs, 
+            orgFilter
+        );
 
-        // Limit to top organizations
-        const adjustedMaxOrgs = maxOrgs - 1;
-        const { filteredGrants: finalGrants, topOrgs } =
-            this.limitToTopOrgsWithRoot(grantsArray, adjustedMaxOrgs, orgFilter);
-
-        const detailedStats = this.calculateDetailedStats(finalGrants);
+        const detailedStats = this.calculateDetailedStats(filteredGrants);
 
         return {
-            grants: finalGrants,
+            grants: filteredGrants,
             orgs: topOrgs,
             connected,
             stats: {
                 orgCount: topOrgs.size,
-                grantCount: finalGrants.length,
+                grantCount: filteredGrants.length,
                 totalGrants: this.totalGrantsCount,
                 totalAmount: detailedStats.totalAmount,
                 averageAmount: detailedStats.averageAmount,
@@ -304,34 +304,41 @@ export class DataManager {
     }
 
     limitToTopOrgsWithRoot(grants, maxOrgs, rootEIN) {
-        // Calculate volume for non-root orgs
+        // Calculate volume for all organizations
         const orgVolume = new Map();
         grants.forEach(grant => {
             const amount = parseFloat(grant.grant_amt);
-            if (grant.filer_ein !== rootEIN) {
-                orgVolume.set(grant.filer_ein,
-                    (orgVolume.get(grant.filer_ein) || 0) + amount);
-            }
-            if (grant.grant_ein !== rootEIN) {
-                orgVolume.set(grant.grant_ein,
-                    (orgVolume.get(grant.grant_ein) || 0) + amount);
-            }
+            // Include root in volume calculations
+            orgVolume.set(grant.filer_ein,
+                (orgVolume.get(grant.filer_ein) || 0) + amount);
+            orgVolume.set(grant.grant_ein,
+                (orgVolume.get(grant.grant_ein) || 0) + amount);
         });
 
-        // Get top orgs by volume (excluding root)
-        const topOrgs = new Set([rootEIN]); // Start with root
+        // Always include root organization
+        const topOrgs = new Set([rootEIN]);
+        
+        // Get remaining top orgs by volume
+        const remainingSlots = maxOrgs - 1; // Reserve one slot for root
         const sortedOrgs = Array.from(orgVolume.entries())
+            .filter(([ein]) => ein !== rootEIN) // Exclude root from sorting
             .sort((a, b) => b[1] - a[1])
-            .slice(0, maxOrgs);
+            .slice(0, remainingSlots);
+        
+        // Add the top organizations
         sortedOrgs.forEach(([ein]) => topOrgs.add(ein));
 
-        // Filter grants to only include connections with top orgs
+        // Filter grants in two steps:
+        // 1. Always include grants involving the root organization
+        // 2. Include grants between top organizations
         const finalGrants = grants.filter(grant => {
-            const includeGrant = (grant.filer_ein === rootEIN || topOrgs.has(grant.filer_ein)) &&
-                (grant.grant_ein === rootEIN || topOrgs.has(grant.grant_ein));
-            if (includeGrant) {
+            // Always include grants involving the root
+            if (grant.filer_ein === rootEIN || grant.grant_ein === rootEIN) {
+                return true;
             }
-            return includeGrant;
+            
+            // For non-root grants, both organizations must be in topOrgs
+            return topOrgs.has(grant.filer_ein) && topOrgs.has(grant.grant_ein);
         });
 
         return {

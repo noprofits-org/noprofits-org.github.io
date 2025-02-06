@@ -391,7 +391,7 @@ export class NetworkVisualization {
                 .call(this.zoom.transform,
                     d3.zoomIdentity
                         .translate(this.width / 2, this.height / 2)
-                        .scale(0.5)  // Start more zoomed out
+                        .scale(1)  // Start more zoomed out
                         .translate(-this.width / 2, -this.height / 2));
 
             // Update slider handle position to match

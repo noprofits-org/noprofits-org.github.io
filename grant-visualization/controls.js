@@ -28,19 +28,16 @@ export class Controls {
 
     setupYearCheckboxes(currentOrg = '') {
         try {
-            // Ensure container exists
             let container = document.getElementById('yearCheckboxes');
             const controlsDiv = document.getElementById('controls');
 
             if (!container) {
-                console.warn('Year checkboxes container not found, creating it...');
                 const yearFilterContainer = document.createElement('div');
                 yearFilterContainer.id = 'yearFilterContainer';
                 yearFilterContainer.innerHTML = `
                     <label>Filter by Grant Years:</label>
                     <div id="yearCheckboxes"></div>
                 `;
-                // Insert after org filter
                 const orgFilterGroup = controlsDiv.querySelector('.control-group');
                 if (orgFilterGroup) {
                     controlsDiv.insertBefore(yearFilterContainer, orgFilterGroup.nextSibling);
@@ -50,18 +47,7 @@ export class Controls {
                 container = document.getElementById('yearCheckboxes');
             }
 
-            // Get available years from DataManager
             let availableYears = this.dataManager.getAvailableYears(currentOrg);
-
-            // Ensure we have at least the last 3 years if empty
-            if (availableYears.length === 0) {
-                const currentYear = new Date().getFullYear();
-                availableYears = [currentYear, currentYear - 1, currentYear - 2];
-            }
-
-
-
-            // Clear and rebuild checkboxes
             container.innerHTML = '';
             availableYears.sort().reverse().forEach(year => {
                 const label = document.createElement('label');
@@ -77,14 +63,14 @@ export class Controls {
                 container.appendChild(label);
             });
 
-            // Add event listeners
+            // Add event listeners for immediate updates
             container.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
                 this.addListener(checkbox, 'change', () => {
-                    this.triggerUpdate();
+                    const filters = this.getFilters();
+                    this.onUpdate(filters);
                 });
             });
 
-            // Show container
             const filterContainer = document.getElementById('yearFilterContainer');
             if (filterContainer) {
                 filterContainer.style.display = 'block';
@@ -109,6 +95,14 @@ export class Controls {
         const minAmountSlider = document.getElementById('minAmount');
         const minAmountDisplay = document.getElementById('minAmountDisplay');
 
+        // Remove update buttons as we'll update automatically
+        if (updateViewBtn) {
+            updateViewBtn.remove();
+        }
+        if (generateBtn) {
+            generateBtn.remove();
+        }
+
         let searchTimeout;
         const handleSearch = (e) => {
             const searchEl = e.target;
@@ -119,47 +113,32 @@ export class Controls {
                 this.updateOrgSearchResults(matches);
                 searchEl.classList.remove('search-loading');
                 // Update year checkboxes when org changes
-                this.setupYearCheckboxes(searchEl.value.trim());
+                this.setupYearCheckboxes(searchEl.value);
+                // Trigger update after org search
+                const filters = this.getFilters();
+                this.onUpdate(filters);
             }, 300);
         };
 
-        const handleOrgSelect = (option) => {
-            orgFilter.value = option.value;
-            matchingOrgs.style.display = 'none';
-            // Update year checkboxes before triggering update
-            this.setupYearCheckboxes(option.value);
-            this.triggerUpdate();
-        };
-
+        // Organization filter with debounce
         if (orgFilter) {
             this.addListener(orgFilter, 'input', handleSearch);
         }
 
+        // Organization selection
         if (matchingOrgs) {
             this.addListener(matchingOrgs, 'click', (e) => {
                 if (e.target.tagName === 'OPTION') {
-                    handleOrgSelect(e.target);
-                }
-            });
-
-            this.addListener(matchingOrgs, 'keydown', (e) => {
-                if (e.key === 'Enter') {
-                    const selectedOption = matchingOrgs.options[matchingOrgs.selectedIndex];
-                    if (selectedOption) {
-                        handleOrgSelect(selectedOption);
-                    }
+                    orgFilter.value = e.target.value;
+                    matchingOrgs.style.display = 'none';
+                    this.setupYearCheckboxes(e.target.value);
+                    const filters = this.getFilters();
+                    this.onUpdate(filters);
                 }
             });
         }
 
-        if (updateViewBtn) {
-            this.addListener(updateViewBtn, 'click', () => this.triggerUpdate());
-        }
-        if (generateBtn) {
-            this.addListener(generateBtn, 'click', () => this.triggerUpdate());
-        }
-
-        // Handle the minimum amount slider
+        // Handle the minimum amount slider with immediate update
         if (minAmountSlider && minAmountDisplay) {
             const minAmountInput = document.getElementById('minAmountInput');
             this.addListener(minAmountSlider, 'input', (e) => {
@@ -168,7 +147,8 @@ export class Controls {
                 if (minAmountInput) {
                     minAmountInput.value = dollarValue;
                 }
-                this.triggerUpdate();
+                const filters = this.getFilters();
+                this.onUpdate(filters);
             });
 
             if (minAmountInput) {
@@ -176,55 +156,24 @@ export class Controls {
                     let value = parseInt(e.target.value);
                     if (isNaN(value)) value = 0;
                     value = Math.min(100000000, Math.max(0, value));
-
-                    // Update display
                     minAmountDisplay.textContent = this.formatDollarAmount(value);
-
-                    // Update slider position
                     const sliderValue = this.convertDollarsToSlider(value);
                     minAmountSlider.value = sliderValue;
-
-                    this.triggerUpdate();
-                });
-
-                // Handle when input loses focus - cleanup invalid values
-                this.addListener(minAmountInput, 'blur', (e) => {
-                    let value = parseInt(e.target.value);
-                    if (isNaN(value)) value = 0;
-                    value = Math.min(100000000, Math.max(0, value));
-                    e.target.value = value;
-                    minAmountDisplay.textContent = this.formatDollarAmount(value);
+                    const filters = this.getFilters();
+                    this.onUpdate(filters);
                 });
             }
         }
 
-        // Handle other numeric inputs
+        // Handle numeric inputs with immediate update
         ['maxOrgs', 'depth'].forEach(id => {
             const input = document.getElementById(id);
             if (input) {
-                this.addListener(input, 'change', () => this.validateInputs());
-            }
-        });
-
-        window.addEventListener('unhandledrejection', (event) => {
-            if (event.reason && event.reason.toString().includes('timeout')) {
-                this.enableControls();
-                const status = document.getElementById('status');
-                if (status) {
-                    status.textContent = 'Operation timed out. Please try again.';
-                    status.style.color = 'orange';
-                }
-            }
-        });
-
-        window.addEventListener('unhandledrejection', (event) => {
-            if (event.reason && event.reason.toString().includes('timeout')) {
-                this.enableControls();
-                const status = document.getElementById('status');
-                if (status) {
-                    status.textContent = 'Operation timed out. Please try again.';
-                    status.style.color = 'orange';
-                }
+                this.addListener(input, 'input', () => {
+                    this.validateInputs();
+                    const filters = this.getFilters();
+                    this.onUpdate(filters);
+                });
             }
         });
     }
