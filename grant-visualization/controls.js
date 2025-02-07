@@ -263,6 +263,70 @@ export class Controls {
         }
     }
 
+    showGrantWarning(maxGrant, orgName) {
+        // Remove any existing warning
+        const existingWarning = document.getElementById('grantWarning');
+        if (existingWarning) {
+            existingWarning.remove();
+        }
+
+        // Create warning element
+        const warning = document.createElement('div');
+        warning.id = 'grantWarning';
+        warning.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 10px;
+            background: rgba(146, 64, 14, 0.9);
+            color: #fef3c7;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #d97706;
+            max-width: 300px;
+            z-index: 1000;
+            font-size: 0.9em;
+        `;
+
+        const formattedAmount = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(maxGrant);
+
+        warning.innerHTML = `
+            <div style="display: flex; align-items: start; gap: 10px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <div>
+                    Warning: ${orgName} has a maximum grant value of ${formattedAmount}. Filtering above this amount may hide connections.
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(warning);
+
+        // Add close button
+        const closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '×';
+        closeBtn.style.cssText = `
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: none;
+            border: none;
+            color: #fef3c7;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 5px;
+        `;
+        closeBtn.onclick = () => warning.remove();
+        warning.appendChild(closeBtn);
+    }
+
     updateYearFilters(availableYears) {
         const container = document.getElementById('yearCheckboxes');
         if (!container) {
@@ -302,6 +366,18 @@ export class Controls {
 
         // Store current stats for use in export
         this.currentStats = stats;
+
+        // Show warning if needed
+        if (stats.showWarning) {
+            const rootOrg = document.getElementById('orgFilter').value;
+            const orgName = this.dataManager.charities[rootOrg]?.name || 'Selected organization';
+            this.showGrantWarning(stats.maxRootGrant, orgName);
+        } else {
+            const existingWarning = document.getElementById('grantWarning');
+            if (existingWarning) {
+                existingWarning.remove();
+            }
+        }
 
         // Format numbers with commas
         const formatNumber = num => num.toLocaleString();

@@ -185,48 +185,62 @@ export class DataManager {
 
     filterData(filters) {
         const { minAmount, maxOrgs, orgFilter, depth, selectedYears } = filters;
-
+    
         // First, verify the organization exists
         if (!this.charities[orgFilter]) {
             console.warn('Organization not found:', orgFilter);
             return this.createEmptyResult(orgFilter);
         }
-
-        // Step 1: Filter grants by year and minimum amount
-        const filteredGrants = this.originalData.grants.filter(grant =>
-            parseFloat(grant.grant_amt) >= minAmount &&
+    
+        // Get max grant for root org and determine if warning needed
+        const maxRootGrant = this.getMaxGrantForOrg(orgFilter);
+        const showWarning = maxRootGrant < minAmount;
+    
+        // Step 1: Get root org's grants within selected years (regardless of amount)
+        const rootGrants = this.originalData.grants.filter(grant =>
+            (grant.filer_ein === orgFilter || grant.grant_ein === orgFilter) &&
             selectedYears.includes(grant.tax_year)
         );
-
-        // Step 2: Verify root node has valid connections
-        const rootConnections = filteredGrants.filter(grant =>
-            grant.filer_ein === orgFilter || grant.grant_ein === orgFilter
-        );
-
-        // If root has no valid connections, only show root
-        if (rootConnections.length === 0) {
+    
+        // If root has no grants in selected years, return early
+        if (rootGrants.length === 0) {
             return {
                 grants: [],
                 orgs: new Set([orgFilter]),
                 connected: new Map([[orgFilter, 0]]),
-                stats: this.calculateDetailedStats([])
+                stats: {
+                    ...this.calculateDetailedStats([]),
+                    maxRootGrant,
+                    showWarning
+                }
             };
         }
-
+    
+        // Step 2: Get other grants that meet minimum amount
+        const otherGrants = this.originalData.grants.filter(grant =>
+            grant.filer_ein !== orgFilter &&
+            grant.grant_ein !== orgFilter &&
+            parseFloat(grant.grant_amt) >= minAmount &&
+            selectedYears.includes(grant.tax_year)
+        );
+    
+        // Combine root grants with filtered other grants
+        const filteredGrants = [...rootGrants, ...otherGrants];
+    
         // Step 3: Build connection map from root
         const connected = new Map([[orgFilter, 0]]);
         let currentDepth = 0;
         let addedNewOrgs = true;
-
+    
         while (currentDepth < depth && addedNewOrgs) {
             addedNewOrgs = false;
-
+    
             filteredGrants.forEach(grant => {
                 const connections = [
                     { from: grant.filer_ein, to: grant.grant_ein },
                     { from: grant.grant_ein, to: grant.filer_ein }
                 ];
-
+    
                 connections.forEach(({ from, to }) => {
                     if (connected.has(from) && connected.get(from) === currentDepth && !connected.has(to)) {
                         connected.set(to, currentDepth + 1);
@@ -234,40 +248,57 @@ export class DataManager {
                     }
                 });
             });
-
+    
             currentDepth++;
         }
-
+    
         // Step 4: Filter grants to only those between connected organizations
         const connectedGrants = filteredGrants.filter(grant => {
             const sourceDepth = connected.get(grant.filer_ein);
             const targetDepth = connected.get(grant.grant_ein);
             return sourceDepth !== undefined && targetDepth !== undefined;
         });
-
+    
         // Step 5: Apply organization limit, ensuring root is always included
         const { filteredGrants: finalGrants, topOrgs } = this.limitToTopOrgsWithRoot(
             connectedGrants,
             maxOrgs,
             orgFilter
         );
-
+    
         const detailedStats = this.calculateDetailedStats(finalGrants);
-
+    
         return {
             grants: finalGrants,
             orgs: topOrgs,
             connected,
             stats: {
+                ...detailedStats,
+                maxRootGrant,
+                showWarning,
                 orgCount: topOrgs.size,
                 grantCount: finalGrants.length,
-                totalGrants: this.totalGrantsCount,
-                totalAmount: detailedStats.totalAmount,
-                averageAmount: detailedStats.averageAmount,
-                standardDeviation: detailedStats.standardDeviation
+                totalGrants: this.totalGrantsCount
             },
             filters: filters
         };
+    }
+
+    getMaxGrantForOrg(orgEin) {
+        if (!this.originalData || !this.originalData.grants) {
+            return 0;
+        }
+        
+        let maxGrant = 0;
+        this.originalData.grants.forEach(grant => {
+            if ((grant.filer_ein === orgEin || grant.grant_ein === orgEin)) {
+                const grantAmount = parseFloat(grant.grant_amt);
+                if (!isNaN(grantAmount) && grantAmount > maxGrant) {
+                    maxGrant = grantAmount;
+                }
+            }
+        });
+        return maxGrant;
     }
 
     createEmptyResult(orgFilter) {
