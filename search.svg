@@ -1,0 +1,16 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+   <!-- Circle part of the magnifying glass -->
+   <circle cx="28" cy="28" r="16"
+            fill="lightgrey"
+            stroke="red"
+            stroke-width="4"/>
+   <!-- Handle -->
+   <line x1="38" y1="38" x2="52" y2="52"
+         stroke="red"
+         stroke-width="4"
+         stroke-linecap="round"/>
+   <!-- Highlight -->
+   <ellipse cx="28" cy="20" rx="8" ry="4"
+            fill="white" opacity="0.6"/>
+</svg>

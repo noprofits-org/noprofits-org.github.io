@@ -1,251 +1,181 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="NoProfits.org - Connecting nonprofits with resources and volunteers to make a difference">    
-    <title>NoProfits.org - Promoting Transparency in Social Services</title>
+    <meta name="description" content="NoProfits.org - Tools and insights for nonprofit transparency">
+    <title>NoProfits.org - Nonprofit Transparency</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="favicon.svg">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+    <link rel="icon" href="/favicon.svg">
 </head>
 
 <body>
     <header>
-        <div class="container">
-            <h1>NoProfits.org</h1>
-            <button id="hamburger" aria-label="Menu" aria-expanded="false" class="hamburger">
-                <span class="hamburger"></span>
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-            </button>
-            <nav id="nav-list">
-                <ul class="nav-list">
-                    <li><a href="#about" class="tab-link active" data-tab="about">About</a></li>
-                    <li><a href="#mission" class="tab-link" data-tab="mission">Mission</a></li>
-                    <li><a href="#resources" class="tab-link" data-tab="resources">Resources</a></li>
-                    <li><a href="#contact" class="tab-link" data-tab="contact">Contact</a></li>
-                    <li><a href="#analyses" class="tab-link" data-tab="analyses">Analyses</a></li>
-                    <li><a href="#blog" class="tab-link" data-tab="blog">Blog</a></li>
-                    <li><a href="#metrics" class="tab-link" data-tab="metrics">Metrics</a></li>
-                </ul>
-            </nav>
-        </div>
+        <img src="/favicon.svg" alt="NoProfits.org Logo" class="main-favicon">
+        <h1>NoProfits.org</h1>
+        <button id="hamburger" aria-label="Menu" aria-expanded="false" class="hamburger">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </button>
+        <nav id="nav-list">
+            <ul class="nav-list">
+                <li><a href="#about" class="tab-link active" data-tab="about">Home</a></li>
+                <li><a href="#mission" class="tab-link" data-tab="mission">Mission</a></li>
+                <li><a href="#resources" class="tab-link" data-tab="resources">Resources</a></li>
+                <li><a href="#contact" class="tab-link" data-tab="contact">Contact</a></li>
+                <li><a href="#analyses" class="tab-link" data-tab="analyses">Analyses</a></li>
+                <li><a href="#blog" class="tab-link" data-tab="blog">Blog</a></li>
+                <li><a href="#metrics" class="tab-link" data-tab="metrics">Metrics</a></li>
+            </ul>
+        </nav>
     </header>
 
     <main>
         <section id="about" class="tab-content active">
-            <h2>Our Focus Areas</h2>
-            <div class="focus-item" style="margin-bottom: 2rem;">
-                <h3>The Scale of Non-Profit Impact</h3>
-                <p>The non-profit sector represents a massive portion of our economy and society:</p>
-                <ul class="resource-list">
-                    <li>
-                        <strong>$3.6 Trillion</strong> in Total Revenue
-                        <p>Making the non-profit sector a significant part of the U.S. economy</p>
-                    </li>
-                    <li>
-                        <strong>1.9 Million</strong> Active Non-Profits
-                        <p>Operating across healthcare, social services, education, and other vital sectors</p>
-                    </li>
-                    <li>
-                        <strong>18 Million</strong> Tax Filings
-                        <p>Creating a complex web of financial relationships that demand transparency</p>
-                    </li>
-                </ul>
-                <p class="citation">Source: <a href="https://projects.propublica.org/nonprofits/" target="_blank">
-                        ProPublica Nonprofit Explorer (Data as of December 20, 2024)</a></p>
+            <div class="feature-icons">
+                <a href="https://search.noprofits.org" target="_blank"><img src="/search.svg" alt="Search Tool Icon"></a>
+                <a href="https://grants.noprofits.org" target="_blank"><img src="/visualize.svg" alt="Grant Visualizer Icon"></a>
+                <a href="https://blog.noprofits.org" target="_blank"><img src="/blog.svg" alt="Blog Icon"></a>
             </div>
-            <div class="focus-grid">
-                <div class="focus-item">
-                    <h3>Service Provider Verification</h3>
-                    <p>Independent assessment of social service organizations' efficiency and effectiveness.</p>
+            <h2>Tools for Nonprofit Insight</h2>
+            <p>NoProfits.org provides essential resources to enhance transparency and understanding within the nonprofit sector.</p>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <h3>Search Tool</h3>
+                    <p>Access detailed nonprofit data efficiently through our comprehensive search platform at <a href="https://search.noprofits.org" target="_blank">search.noprofits.org</a>.</p>
                 </div>
-                <div class="focus-item">
-                    <h3>Resource Directory</h3>
-                    <p>Connecting people with transparent, verified service providers and tracking funding flows.</p>
+                <div class="feature-item">
+                    <h3>Grant Visualizer</h3>
+                    <p>Analyze funding patterns with our grant visualization tool, available at <a href="https://grants.noprofits.org" target="_blank">grants.noprofits.org</a>.</p>
                 </div>
-                <div class="focus-item">
-                    <h3>Education</h3>
-                    <p>Understanding how social services funding works and identifying effective programs.</p>
-                </div>
-                <div class="focus-item">
-                    <h3>Outcome Tracking</h3>
-                    <p>Monitoring and reporting real results in community assistance programs.</p>
+                <div class="feature-item">
+                    <h3>Blog</h3>
+                    <p>Read in-depth analyses and updates on nonprofit trends at <a href="https://blog.noprofits.org" target="_blank">blog.noprofits.org</a>.</p>
                 </div>
             </div>
         </section>
 
         <section id="mission" class="tab-content">
+            <img src="/favicon.svg" alt="Mission Icon" class="section-icon">
             <h2>Transparency in Social Services</h2>
-            <p>NoProfits.org is dedicated to promoting transparency and accountability in social services, ensuring that
-                resources intended for community assistance reach those in need efficiently and equitably. We work to
-                connect people with verified service providers while advocating for responsible stewardship of public
-                and private funding in the social services sector.</p>
+            <p>NoProfits.org is dedicated to promoting transparency and accountability in social services, ensuring that resources intended for community assistance reach those in need efficiently and equitably. We work to connect people with verified service providers while advocating for responsible stewardship of public and private funding in the social services sector.</p>
         </section>
 
         <section id="resources" class="tab-content">
+            <img src="/search.svg" alt="Resources Icon" class="section-icon">
             <h2>Resources</h2>
-
             <div class="resource-grid">
                 <div class="focus-item">
                     <h3>Official Verification Tools</h3>
                     <ul class="resource-list">
-                        <li>
-                            <a href="https://search.noprofits.org" target="_blank">Search ProPublica Data</a>
-                            <p>Search and verify nonprofit organizations using ProPublica's database</p>
-                        </li>
-                        <li>
-                            <a href="https://www.irs.gov/charities-non-profits/tax-exempt-organization-search"
-                                target="_blank">IRS Non-Profit Search</a>
-                            <p>Verify tax-exempt status and access Form 990s</p>
-                        </li>
-                        <li>
-                            <a href="https://projects.propublica.org/nonprofits/" target="_blank">ProPublica Nonprofit
-                                Explorer</a>
-                            <p>Research detailed financial records and tax returns</p>
-                        </li>
-                        <li>
-                            <a href="https://www.guidestar.org" target="_blank">GuideStar/Candid</a>
-                            <p>Comprehensive non-profit profiles and financials</p>
-                        </li>
+                        <li><a href="https://search.noprofits.org" target="_blank">Search ProPublica Data</a>
+                            <p>Search and verify nonprofit organizations using ProPublica's database</p></li>
+                        <li><a href="https://www.irs.gov/charities-non-profits/tax-exempt-organization-search" target="_blank">IRS Non-Profit Search</a>
+                            <p>Verify tax-exempt status and access Form 990s</p></li>
+                        <li><a href="https://projects.propublica.org/nonprofits/" target="_blank">ProPublica Nonprofit Explorer</a>
+                            <p>Research detailed financial records and tax returns</p></li>
+                        <li><a href="https://www.guidestar.org" target="_blank">GuideStar/Candid</a>
+                            <p>Comprehensive non-profit profiles and financials</p></li>
                     </ul>
                 </div>
-
                 <div class="focus-item">
                     <h3>Red Flags to Watch</h3>
                     <ul class="resource-list">
                         <li>Excessive Administrative Costs
-                            <p>Compare admin expenses to program spending</p>
-                        </li>
+                            <p>Compare admin expenses to program spending</p></li>
                         <li>Unclear Financial Reporting
-                            <p>Look for detailed breakdowns of spending</p>
-                        </li>
+                            <p>Look for detailed breakdowns of spending</p></li>
                         <li>Related Party Transactions
-                            <p>Check for conflicts of interest in Form 990</p>
-                        </li>
+                            <p>Check for conflicts of interest in Form 990</p></li>
                         <li>High Executive Compensation
-                            <p>Compare to similar organizations' reporting</p>
-                        </li>
+                            <p>Compare to similar organizations' reporting</p></li>
                     </ul>
                 </div>
-
                 <div class="focus-item">
                     <h3>Insurance & Funding</h3>
                     <ul class="resource-list">
-                        <li>
-                            <a href="https://www.cms.gov/research-statistics-data-and-systems" target="_blank">CMS
-                                Data</a>
-                            <p>Medicare/Medicaid payment information</p>
-                        </li>
-                        <li>
-                            <a href="https://www.charitynavigator.org" target="_blank">Charity Navigator</a>
-                            <p>Independent charity evaluations</p>
-                        </li>
+                        <li><a href="https://www.cms.gov/research-statistics-data-and-systems" target="_blank">CMS Data</a>
+                            <p>Medicare/Medicaid payment information</p></li>
+                        <li><a href="https://www.charitynavigator.org" target="_blank">Charity Navigator</a>
+                            <p>Independent charity evaluations</p></li>
                     </ul>
                 </div>
-
                 <div class="focus-item">
                     <h3>How to Research</h3>
                     <ul class="resource-list">
                         <li>Start with Form 990
-                            <p>Review Part III for program details</p>
-                        </li>
+                            <p>Review Part III for program details</p></li>
                         <li>Check Multiple Years
-                            <p>Look for patterns and changes over time</p>
-                        </li>
+                            <p>Look for patterns and changes over time</p></li>
                         <li>Compare Organizations
-                            <p>Use similar-sized nonprofits as benchmarks</p>
-                        </li>
+                            <p>Use similar-sized nonprofits as benchmarks</p></li>
                     </ul>
                 </div>
             </div>
         </section>
 
-        <section id="analyses" class="tab-content">
-            <p><a href="https://grants.noprofits.org"
-                    target="_blank">grant-visualization infographic</a></p>
-            </div>
-        </section>
-
         <section id="contact" class="tab-content">
+            <img src="/favicon.svg" alt="Contact Icon" class="section-icon">
             <h2>Contact</h2>
             <p><a href="mailto:peter@noprofits.org">peter@noprofits.org</a></p>
         </section>
 
+        <section id="analyses" class="tab-content">
+            <img src="/visualize.svg" alt="Analyses Icon" class="section-icon">
+            <h2>Analyses</h2>
+            <p><a href="https://grants.noprofits.org" target="_blank">Grant-visualization infographic</a></p>
+        </section>
+
         <section id="blog" class="tab-content">
+            <img src="/blog.svg" alt="Blog Icon" class="section-icon">
             <h2>Blog</h2>
-            <p>Hey check out my <a href="https://blog.noprofits.org" target="_blank">blog</a> where I post about
-                science, math, non-profits issues, and other stuff.</p>
+            <p>Hey check out my <a href="https://blog.noprofits.org" target="_blank">blog</a> where I post about science, math, non-profits issues, and other stuff.</p>
         </section>
 
         <section id="metrics" class="tab-content">
+            <img src="/favicon.svg" alt="Metrics Icon" class="section-icon">
             <h2>Financial Metrics for Non-Profits</h2>
-            <p>Understanding the financial health of a non-profit is crucial. These metrics can be derived from the IRS
-                Form 990.</p>
-
+            <p>Understanding the financial health of a non-profit is crucial. These metrics can be derived from the IRS Form 990.</p>
             <div class="focus-item">
                 <h3>Key Metrics</h3>
                 <ul class="resource-list">
-                    <li>
-                        <strong>Program Expense Ratio:</strong> (Program Service Expenses / Total Expenses) x 100<br>
-                        <em>990 Data:</em> Program Service Expenses (Part IX, line 24, col B), Total Expenses (Part IX,
-                        line 25, col A)
-                    </li>
-                    <li>
-                        <strong>Administrative Expense Ratio:</strong> (Management and General Expenses / Total
-                        Expenses) x 100<br>
-                        <em>990 Data:</em> Management & General (Part IX, line 24, col A), Total Expenses (Part IX, line
-                        25, col A)
-                    </li>
-                    <li>
-                        <strong>Fundraising Efficiency Ratio:</strong> (Fundraising Expenses / Contributions) x 100<br>
-                        <em>990 Data:</em> Fundraising Expenses (Part IX, line 24, col D), Contributions (Part VIII,
-                        line 1a)
-                    </li>
-                    <li>
-                        <strong>Current Ratio:</strong> (Current Assets / Current Liabilities)<br>
-                        <em>990 Data:</em> Current Assets (Part X, Lines 1-6 sum), Current Liabilities (Part X, Lines
-                        18-22 sum)
-                    </li>
-                    <li>
-                        <strong>Operating Reserve Ratio:</strong> (Unrestricted Net Assets / (Total Expenses / 12))<br>
-                        <em>990 Data:</em> Unrestricted Net Assets (Part X, line 30, col A), Total Expenses (Part IX,
-                        line 25, col A)
-                    </li>
+                    <li><strong>Program Expense Ratio:</strong> (Program Service Expenses / Total Expenses) x 100<br>
+                        <em>990 Data:</em> Program Service Expenses (Part IX, line 24, col B), Total Expenses (Part IX, line 25, col A)</li>
+                    <li><strong>Administrative Expense Ratio:</strong> (Management and General Expenses / Total Expenses) x 100<br>
+                        <em>990 Data:</em> Management & General (Part IX, line 24, col A), Total Expenses (Part IX, line 25, col A)</li>
+                    <li><strong>Fundraising Efficiency Ratio:</strong> (Fundraising Expenses / Contributions) x 100<br>
+                        <em>990 Data:</em> Fundraising Expenses (Part IX, line 24, col D), Contributions (Part VIII, line 1a)</li>
+                    <li><strong>Current Ratio:</strong> (Current Assets / Current Liabilities)<br>
+                        <em>990 Data:</em> Current Assets (Part X, Lines 1-6 sum), Current Liabilities (Part X, Lines 18-22 sum)</li>
+                    <li><strong>Operating Reserve Ratio:</strong> (Unrestricted Net Assets / (Total Expenses / 12))<br>
+                        <em>990 Data:</em> Unrestricted Net Assets (Part X, line 30, col A), Total Expenses (Part IX, line 25, col A)</li>
                 </ul>
             </div>
             <p>Analyzing these metrics over time and comparing them to benchmarks provides valuable insights.</p>
         </section>
-        <footer>
-            <p>&copy; 2024 NoProfits.org. All rights reserved.</p>
-        </footer>
-        <script>
+    </main>
+
+    <footer>
+        <p>© 2025 NoProfits.org. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.tab-link').forEach(tab => {
                 tab.addEventListener('click', (e) => {
                     e.preventDefault();
                     const tabId = tab.getAttribute('data-tab');
-
-                    // Hide all content
-                    document.querySelectorAll('.tab-content').forEach(content => {
-                        content.classList.remove('active');
-                    });
-
-                    // Remove active class from all tabs
-                    document.querySelectorAll('.tab-link').forEach(tab => {
-                        tab.classList.remove('active');
-                    });
-
-                    // Show selected content and activate tab
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    document.querySelectorAll('.tab-link').forEach(link => link.classList.remove('active'));
                     document.getElementById(tabId).classList.add('active');
                     tab.classList.add('active');
                 });
             });
-        </script>
-        <script src="nonprofits.js"></script>
+        });
+    </script>
+    <script src="nonprofits.js"></script>
 </body>
-
 </html>

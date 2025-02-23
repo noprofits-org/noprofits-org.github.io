@@ -1,0 +1,17 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Flask neck -->
+  <path d="M26 15 L26 22 L38 22 L38 15" fill="#d1d5db" transform="rotate(-25, 32, 32)"/>
+  
+  <!-- Flask rim -->
+  <ellipse cx="32" cy="15" rx="10" ry="2" fill="#d1d5db" transform="rotate(-25, 32, 32)"/>
+  
+  <!-- Flask body -->
+  <path d="M18 48 L26 22 L38 22 L46 48 C46 54 18 54 18 48" fill="#d1d5db" transform="rotate(-25, 32, 32)"/>
+  
+  <!-- Liquid -->
+  <path d="M21 48 L26 32 L38 32 L43 48 C43 52 21 52 21 48" fill="#02b225" transform="rotate(-25, 32, 32)"/>
+  
+  <!-- Highlight -->
+  <path d="M28 20 C28 20, 30 19, 32 19 S36 20, 36 20" stroke="white" fill="none" stroke-width="1.5" transform="rotate(-25, 32, 32)"/>
+</svg>
