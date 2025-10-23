@@ -33,20 +33,26 @@ h2 {
 
 p {
     margin-bottom: 1rem;
-    color: #9ca3af;
+    color: #cbd5e1; /* Improved contrast ratio for WCAG AA compliance */
     font-size: 1rem;
 }
 
 /* Links */
 a {
-    color: #2563eb;
-    text-decoration: none;
+    color: #60a5fa; /* Improved contrast ratio for WCAG AA compliance */
+    text-decoration: underline; /* Always underline for accessibility */
+    text-underline-offset: 2px; /* Subtle spacing for better readability */
     transition: color 0.2s ease;
 }
 
 a:hover {
-    color: #1e40af;
+    color: #93c5fd; /* Lighter on hover for clear visual feedback */
     text-decoration: underline;
+}
+
+a:focus {
+    outline: 2px solid #60a5fa;
+    outline-offset: 2px;
 }
 
 /* Header and Navigation */
@@ -77,11 +83,18 @@ nav a {
     border-radius: 4px;
     transition: background-color 0.2s ease;
     border: 1px solid transparent; /* Add subtle border for button-like appearance */
+    text-decoration: none; /* Remove underline for nav buttons */
 }
 
 nav a:hover, nav a.active {
     background-color: #374151;
     border-color: #374151; /* Highlight active state */
+    text-decoration: none; /* Keep no underline for nav buttons */
+}
+
+nav a:focus {
+    outline: 2px solid #60a5fa;
+    outline-offset: 2px;
 }
 
 /* Feature Icons Section */
@@ -155,7 +168,7 @@ nav a:hover, nav a.active {
 }
 
 .resource-list li p {
-    color: #9ca3af;
+    color: #cbd5e1; /* Improved contrast ratio for WCAG AA compliance */
     margin-top: 0.25rem;
 }
 
@@ -165,7 +178,7 @@ footer {
     padding: 2rem 0;
     border-top: 1px solid #374151;
     text-align: center;
-    color: #6b7280;
+    color: #9ca3af; /* Improved contrast ratio for footer text */
 }
 
 /* Hamburger Menu */

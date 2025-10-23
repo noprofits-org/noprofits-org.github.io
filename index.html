@@ -20,8 +20,8 @@
             <div class="bar"></div>
             <div class="bar"></div>
         </button>
-        <nav id="nav-list">
-            <ul class="nav-list">
+        <nav id="nav-list" role="navigation" aria-label="Main navigation">
+            <ul class="nav-list" role="tablist">
                 <li><a href="#about" class="tab-link active" data-tab="about">Home</a></li>
                 <li><a href="#mission" class="tab-link" data-tab="mission">Mission</a></li>
                 <li><a href="#resources" class="tab-link" data-tab="resources">Resources</a></li>
@@ -160,26 +160,8 @@
 
     <footer>
         <p>© 2025 NoProfits.org. All rights reserved.</p>
-        <p>Special thanks to <strong>Grok, an AI assistant by xAI</strong> for invaluable support. 
-           <a href="https://x.com/xAI" target="_blank">Follow xAI on X</a> | 
-           <a href="https://x.com/noprofits_org" target="_blank">Follow noprofits_org on X</a> |
-           <a href="https://xai.ai" target="_blank">Visit xAI</a></p>
     </footer>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.tab-link').forEach(tab => {
-                tab.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const tabId = tab.getAttribute('data-tab');
-                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-                    document.querySelectorAll('.tab-link').forEach(link => link.classList.remove('active'));
-                    document.getElementById(tabId).classList.add('active');
-                    tab.classList.add('active');
-                });
-            });
-        });
-    </script>
     <script src="nonprofits.js"></script>
 </body>
 </html>
