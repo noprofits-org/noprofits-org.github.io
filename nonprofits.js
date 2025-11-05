@@ -22,7 +22,8 @@ const NoProfits = (() => {
     tabLinks: null,
     tabContents: null,
     themeToggle: null,
-    themeIcon: null
+    themeIcon: null,
+    mobileOverlay: null
   };
 
   /**
@@ -35,6 +36,7 @@ const NoProfits = (() => {
     DOM.tabContents = document.querySelectorAll(CONFIG.TAB_CONTENT_SELECTOR);
     DOM.themeToggle = document.getElementById('theme-toggle');
     DOM.themeIcon = document.getElementById('theme-icon');
+    DOM.mobileOverlay = document.getElementById('mobile-overlay');
   }
 
   /**
@@ -46,6 +48,14 @@ const NoProfits = (() => {
     DOM.navList.classList.remove(CONFIG.SHOW_CLASS);
     DOM.hamburger.classList.remove(CONFIG.ACTIVE_CLASS);
     DOM.hamburger.setAttribute('aria-expanded', 'false');
+
+    // Hide mobile overlay
+    if (DOM.mobileOverlay) {
+      DOM.mobileOverlay.classList.remove(CONFIG.SHOW_CLASS);
+    }
+
+    // Re-enable body scroll
+    document.body.style.overflow = '';
   }
 
   /**
@@ -57,6 +67,14 @@ const NoProfits = (() => {
     DOM.navList.classList.add(CONFIG.SHOW_CLASS);
     DOM.hamburger.classList.add(CONFIG.ACTIVE_CLASS);
     DOM.hamburger.setAttribute('aria-expanded', 'true');
+
+    // Show mobile overlay
+    if (DOM.mobileOverlay) {
+      DOM.mobileOverlay.classList.add(CONFIG.SHOW_CLASS);
+    }
+
+    // Prevent body scroll when menu is open
+    document.body.style.overflow = 'hidden';
   }
 
   /**
@@ -294,6 +312,11 @@ const NoProfits = (() => {
 
     // Toggle menu on hamburger click
     DOM.hamburger.addEventListener('click', toggleMenu);
+
+    // Close menu when clicking overlay
+    if (DOM.mobileOverlay) {
+      DOM.mobileOverlay.addEventListener('click', closeMenu);
+    }
 
     // Close menu when clicking outside
     document.addEventListener('click', (event) => {
