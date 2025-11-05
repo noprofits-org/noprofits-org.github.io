@@ -20,7 +20,9 @@ const NoProfits = (() => {
     hamburger: null,
     navList: null,
     tabLinks: null,
-    tabContents: null
+    tabContents: null,
+    themeToggle: null,
+    themeIcon: null
   };
 
   /**
@@ -31,6 +33,8 @@ const NoProfits = (() => {
     DOM.navList = document.querySelector('.nav-list');
     DOM.tabLinks = document.querySelectorAll(CONFIG.TAB_SELECTOR);
     DOM.tabContents = document.querySelectorAll(CONFIG.TAB_CONTENT_SELECTOR);
+    DOM.themeToggle = document.getElementById('theme-toggle');
+    DOM.themeIcon = document.getElementById('theme-icon');
   }
 
   /**
@@ -209,6 +213,77 @@ const NoProfits = (() => {
   }
 
   /**
+   * Gets the current theme from localStorage or system preference
+   * @returns {string} 'light' or 'dark'
+   */
+  function getCurrentTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      return savedTheme;
+    }
+    // Check system preference
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  /**
+   * Sets the theme and updates UI
+   * @param {string} theme - 'light' or 'dark'
+   */
+  function setTheme(theme) {
+    if (theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      if (DOM.themeIcon) {
+        DOM.themeIcon.textContent = '☀️';
+      }
+      if (DOM.themeToggle) {
+        DOM.themeToggle.setAttribute('aria-label', 'Toggle light mode');
+      }
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      if (DOM.themeIcon) {
+        DOM.themeIcon.textContent = '🌙';
+      }
+      if (DOM.themeToggle) {
+        DOM.themeToggle.setAttribute('aria-label', 'Toggle dark mode');
+      }
+    }
+    localStorage.setItem('theme', theme);
+  }
+
+  /**
+   * Toggles between light and dark theme
+   */
+  function toggleTheme() {
+    const currentTheme = document.documentElement.hasAttribute('data-theme') ? 'dark' : 'light';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+  }
+
+  /**
+   * Initializes the theme toggle button
+   */
+  function initThemeToggle() {
+    if (!DOM.themeToggle) {
+      console.warn('Theme toggle button not found');
+      return;
+    }
+
+    // Set initial theme
+    const initialTheme = getCurrentTheme();
+    setTheme(initialTheme);
+
+    // Add click listener
+    DOM.themeToggle.addEventListener('click', toggleTheme);
+
+    // Listen for system theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      if (!localStorage.getItem('theme')) {
+        setTheme(e.matches ? 'dark' : 'light');
+      }
+    });
+  }
+
+  /**
    * Initializes the mobile hamburger menu
    */
   function initMobileMenu() {
@@ -249,6 +324,7 @@ const NoProfits = (() => {
   function init() {
     try {
       cacheDOMElements();
+      initThemeToggle();
       initMobileMenu();
       initTabs();
     } catch (error) {
@@ -268,6 +344,8 @@ const NoProfits = (() => {
     closeMenu,
     openMenu,
     toggleMenu,
-    switchTab
+    switchTab,
+    toggleTheme,
+    setTheme
   };
 })();
