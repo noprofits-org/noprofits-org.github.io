@@ -22,7 +22,6 @@ const NoProfits = (() => {
     tabLinks: null,
     tabContents: null,
     themeToggle: null,
-    themeIcon: null,
     mobileOverlay: null
   };
 
@@ -35,7 +34,6 @@ const NoProfits = (() => {
     DOM.tabLinks = document.querySelectorAll(CONFIG.TAB_SELECTOR);
     DOM.tabContents = document.querySelectorAll(CONFIG.TAB_CONTENT_SELECTOR);
     DOM.themeToggle = document.getElementById('theme-toggle');
-    DOM.themeIcon = document.getElementById('theme-icon');
     DOM.mobileOverlay = document.getElementById('mobile-overlay');
   }
 
@@ -94,9 +92,9 @@ const NoProfits = (() => {
     if (!tabId) return;
 
     const tabContent = document.getElementById(tabId);
-    const tabLink = document.querySelector(`[data-tab="${tabId}"]`);
+    const matchingLinks = document.querySelectorAll(`[data-tab="${tabId}"]`);
 
-    if (!tabContent || !tabLink) {
+    if (!tabContent || matchingLinks.length === 0) {
       console.warn(`Tab "${tabId}" not found`);
       return;
     }
@@ -105,13 +103,13 @@ const NoProfits = (() => {
     DOM.tabContents.forEach(content => content.classList.remove(CONFIG.ACTIVE_CLASS));
     DOM.tabLinks.forEach(link => link.classList.remove(CONFIG.ACTIVE_CLASS));
 
-    // Activate the selected tab
+    // Activate the selected tab content and every link bound to this tab
     tabContent.classList.add(CONFIG.ACTIVE_CLASS);
-    tabLink.classList.add(CONFIG.ACTIVE_CLASS);
+    matchingLinks.forEach(link => link.classList.add(CONFIG.ACTIVE_CLASS));
 
     // Update ARIA attributes
     DOM.tabLinks.forEach(link => {
-      const isActive = link === tabLink;
+      const isActive = link.getAttribute('data-tab') === tabId;
       link.setAttribute('aria-selected', isActive);
       link.setAttribute('tabindex', isActive ? '0' : '-1');
     });
@@ -135,7 +133,7 @@ const NoProfits = (() => {
    */
   function handleTabClick(event) {
     event.preventDefault();
-    const tabId = event.target.getAttribute('data-tab');
+    const tabId = event.currentTarget.getAttribute('data-tab');
     if (tabId) {
       switchTab(tabId);
       closeMenu(); // Close mobile menu when tab is selected
@@ -250,19 +248,13 @@ const NoProfits = (() => {
   function setTheme(theme) {
     if (theme === 'dark') {
       document.documentElement.setAttribute('data-theme', 'dark');
-      if (DOM.themeIcon) {
-        DOM.themeIcon.textContent = '☀️';
-      }
       if (DOM.themeToggle) {
-        DOM.themeToggle.setAttribute('aria-label', 'Toggle light mode');
+        DOM.themeToggle.setAttribute('aria-label', 'Switch to light mode');
       }
     } else {
       document.documentElement.removeAttribute('data-theme');
-      if (DOM.themeIcon) {
-        DOM.themeIcon.textContent = '🌙';
-      }
       if (DOM.themeToggle) {
-        DOM.themeToggle.setAttribute('aria-label', 'Toggle dark mode');
+        DOM.themeToggle.setAttribute('aria-label', 'Switch to dark mode');
       }
     }
     localStorage.setItem('theme', theme);
