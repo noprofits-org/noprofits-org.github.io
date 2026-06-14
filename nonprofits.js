@@ -12,7 +12,9 @@ const NoProfits = (() => {
     TAB_CONTENT_SELECTOR: '.tab-content',
     ACTIVE_CLASS: 'active',
     SHOW_CLASS: 'show',
-    DEFAULT_TAB: 'about'
+    DEFAULT_TAB: 'about',
+    BLOG_FEED: 'https://blog.noprofits.org/atom.xml',
+    BLOG_LIMIT: 12
   };
 
   // Cached DOM elements
@@ -125,6 +127,11 @@ const NoProfits = (() => {
     // Update URL hash without triggering hashchange event
     if (updateHistory && window.location.hash !== `#${tabId}`) {
       history.pushState(null, '', `#${tabId}`);
+    }
+
+    // Lazy-load the blog feed the first time the Blog tab is opened
+    if (tabId === 'blog') {
+      loadBlogPosts();
     }
 
     // Focus management - focus the tab panel for screen readers
@@ -339,6 +346,124 @@ const NoProfits = (() => {
 
     // Set initial ARIA attribute
     DOM.hamburger.setAttribute('aria-expanded', 'false');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Blog feed — pulls the most recent posts from blog.noprofits.org/atom.xml
+  // ---------------------------------------------------------------------------
+  let blogState = 'idle'; // idle | loading | done | error (error allows retry)
+
+  const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+                  'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
+  /**
+   * Formats an ISO-8601 date string as "JUN 21, 2025" (UTC, to match the feed).
+   * @param {string} iso
+   * @returns {string}
+   */
+  function formatPostDate(iso) {
+    const dt = new Date(iso);
+    if (isNaN(dt.getTime())) return (iso || '').slice(0, 10);
+    return `${MONTHS[dt.getUTCMonth()]} ${String(dt.getUTCDate()).padStart(2, '0')}, ${dt.getUTCFullYear()}`;
+  }
+
+  /**
+   * Renders Atom <entry> elements as editorial post rows (first is featured).
+   * Uses textContent throughout so feed data can never inject markup.
+   * @param {HTMLElement} list
+   * @param {Element[]} entries
+   */
+  function renderPosts(list, entries) {
+    list.textContent = '';
+
+    entries.forEach((entry, i) => {
+      const titleEl = entry.querySelector('title');
+      const linkEl = entry.querySelector('link');
+      const dateEl = entry.querySelector('published') || entry.querySelector('updated');
+      const summaryEl = entry.querySelector('summary');
+
+      const row = document.createElement('a');
+      row.className = i === 0 ? 'post-row featured' : 'post-row';
+      row.href = linkEl ? linkEl.getAttribute('href') : 'https://blog.noprofits.org';
+      row.target = '_blank';
+      row.rel = 'noopener';
+
+      const date = document.createElement('span');
+      date.className = 'post-date';
+      date.textContent = dateEl ? formatPostDate(dateEl.textContent.trim()) : '';
+
+      const main = document.createElement('span');
+      main.className = 'post-main';
+
+      const title = document.createElement('span');
+      title.className = 'post-title';
+      title.textContent = titleEl ? titleEl.textContent.trim() : 'Untitled';
+      main.appendChild(title);
+
+      const excerptText = summaryEl ? summaryEl.textContent.trim() : '';
+      if (excerptText) {
+        const excerpt = document.createElement('span');
+        excerpt.className = 'post-excerpt';
+        excerpt.textContent = excerptText;
+        main.appendChild(excerpt);
+      }
+
+      row.appendChild(date);
+      row.appendChild(main);
+      list.appendChild(row);
+    });
+  }
+
+  /**
+   * Shows a graceful fallback link when the feed can't be loaded.
+   * @param {HTMLElement} list
+   */
+  function renderBlogError(list) {
+    list.textContent = '';
+    const p = document.createElement('p');
+    p.className = 'post-status';
+    p.textContent = 'Couldn’t load recent posts right now — ';
+    const a = document.createElement('a');
+    a.href = 'https://blog.noprofits.org';
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.textContent = 'visit the blog →';
+    p.appendChild(a);
+    list.appendChild(p);
+  }
+
+  /**
+   * Fetches the Atom feed and renders the most recent posts. Runs at most once
+   * per successful load; a failure leaves the state retryable.
+   */
+  async function loadBlogPosts() {
+    if (blogState === 'loading' || blogState === 'done') return;
+
+    const list = document.getElementById('blog-list');
+    if (!list) return;
+
+    blogState = 'loading';
+    try {
+      const res = await fetch(CONFIG.BLOG_FEED, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const doc = new DOMParser().parseFromString(await res.text(), 'application/xml');
+      if (doc.querySelector('parsererror')) throw new Error('feed parse error');
+
+      const entries = Array.from(doc.querySelectorAll('entry')).slice(0, CONFIG.BLOG_LIMIT);
+      if (!entries.length) throw new Error('no entries in feed');
+
+      renderPosts(list, entries);
+
+      const count = document.getElementById('blog-count');
+      if (count) count.textContent = `${entries.length} POSTS`;
+
+      blogState = 'done';
+    } catch (error) {
+      console.warn('Blog feed load failed:', error);
+      renderBlogError(list);
+      blogState = 'error';
+    }
   }
 
   /**

@@ -201,10 +201,22 @@
 
         <section id="blog" class="tab-content">
             <div class="section-head">
-                <img src="/blog.svg" alt="">
                 <h2>Blog</h2>
             </div>
-            <p>Hey — check out my <a href="https://blog.noprofits.org" target="_blank" rel="noopener">blog</a>, where I post about science, math, non-profit issues, and other stuff.</p>
+            <p class="lead">Field notes on nonprofit data, automation, and the command line — published at <a href="https://blog.noprofits.org" target="_blank" rel="noopener">blog.noprofits.org</a>.</p>
+
+            <div class="latest-head">
+                <span class="tick" aria-hidden="true"></span>
+                <span class="latest-label">Latest</span>
+                <span class="latest-rule"></span>
+                <span id="blog-count" class="latest-count">RECENT POSTS</span>
+            </div>
+
+            <div id="blog-list" class="post-list" aria-live="polite">
+                <p class="post-status">Loading recent posts…</p>
+            </div>
+
+            <a class="blog-allposts" href="https://blog.noprofits.org" target="_blank" rel="noopener">All posts →</a>
         </section>
 
         <section id="contact" class="tab-content">

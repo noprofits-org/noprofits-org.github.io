@@ -625,6 +625,128 @@ main p { color: var(--fg-soft); }
     line-height: 1.5;
 }
 
+/* ---------- Blog: "Latest" list (mockup-style) ---------- */
+.latest-head {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin: 2rem 0 0.25rem;
+}
+
+.latest-label {
+    font-family: var(--font-label);
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: 1.05rem;
+    letter-spacing: 0.10em;
+    color: var(--fg);
+    line-height: 1;
+}
+
+.latest-rule {
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+}
+
+.latest-count {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--fg-faint);
+    white-space: nowrap;
+}
+
+.post-list {
+    margin-top: 0.5rem;
+    border-top: 2px solid var(--rule);
+}
+
+.post-row {
+    display: grid;
+    grid-template-columns: 118px 1fr;
+    gap: 26px;
+    align-items: baseline;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--line);
+    color: var(--fg);
+    cursor: pointer;
+    transition: background-color 0.15s var(--ease);
+}
+
+.post-row:hover {
+    background: var(--bg-soft);
+    color: var(--fg);
+    border-bottom-color: var(--line);
+}
+
+.post-date {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.02em;
+    color: var(--fg-faint);
+    padding-top: 3px;
+}
+
+.post-main { display: block; }
+
+.post-title {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1.08;
+    color: var(--fg);
+}
+
+.post-excerpt {
+    display: block;
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--fg-soft);
+    margin-top: 6px;
+    max-width: 64ch;
+}
+
+/* Featured (most recent) row reads larger */
+.post-row.featured { padding: 26px 0 28px; }
+
+.post-row.featured .post-title { font-size: 2rem; line-height: 1.04; }
+
+.post-row.featured .post-excerpt {
+    font-size: 15.5px;
+    margin-top: 10px;
+}
+
+.post-status {
+    color: var(--fg-faint);
+    font-size: 0.95rem;
+    padding: 22px 0;
+}
+
+.blog-allposts {
+    display: inline-block;
+    margin-top: 1.5rem;
+    font-family: var(--font-label);
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.13em;
+    color: var(--fg);
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 3px;
+}
+
+.blog-allposts:hover { color: var(--accent-text); border-bottom-color: var(--accent-text); }
+
+@media (max-width: 560px) {
+    .post-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+    .post-date { padding-top: 0; }
+}
+
 /* ---------- Inline contact ---------- */
 .contact-mail {
     display: inline-block;
