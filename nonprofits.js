@@ -415,6 +415,40 @@ const NoProfits = (() => {
   }
 
   /**
+   * Populates the Home "Blog" feature card with a one-line preview of the
+   * most recent post. Safe no-op if the card isn't present.
+   * @param {Element} entry - the newest Atom <entry>
+   */
+  function renderHomePreview(entry) {
+    const el = document.getElementById('home-blog-preview');
+    if (!el || !entry) return;
+
+    const titleEl = entry.querySelector('title');
+    const dateEl = entry.querySelector('published') || entry.querySelector('updated');
+
+    el.textContent = '';
+
+    const label = document.createElement('span');
+    label.className = 'fc-preview-label';
+    label.textContent = 'Latest post';
+    el.appendChild(label);
+
+    const title = document.createElement('span');
+    title.className = 'fc-preview-title';
+    title.textContent = titleEl ? titleEl.textContent.trim() : '';
+    el.appendChild(title);
+
+    if (dateEl) {
+      const date = document.createElement('span');
+      date.className = 'fc-preview-date';
+      date.textContent = formatPostDate(dateEl.textContent.trim());
+      el.appendChild(date);
+    }
+
+    el.classList.add('is-loaded');
+  }
+
+  /**
    * Shows a graceful fallback link when the feed can't be loaded.
    * @param {HTMLElement} list
    */
@@ -454,6 +488,7 @@ const NoProfits = (() => {
       if (!entries.length) throw new Error('no entries in feed');
 
       renderPosts(list, entries);
+      renderHomePreview(entries[0]);
 
       const count = document.getElementById('blog-count');
       if (count) count.textContent = `${entries.length} POSTS`;
@@ -475,6 +510,7 @@ const NoProfits = (() => {
       initThemeToggle();
       initMobileMenu();
       initTabs();
+      loadBlogPosts(); // populate the Home blog-card preview + Blog tab list
     } catch (error) {
       console.error('Error initializing NoProfits.org:', error);
     }

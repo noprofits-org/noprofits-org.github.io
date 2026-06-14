@@ -72,34 +72,46 @@
                 </div>
             </div>
 
-            <div class="tool-tiles">
-                <a class="tool-tile" href="https://search.noprofits.org" target="_blank" rel="noopener">
-                    <img src="/search.svg" alt="">
-                    <span>Search</span>
+            <div class="feature-grid">
+                <a class="feature-card" href="https://search.noprofits.org" target="_blank" rel="noopener">
+                    <div class="fc-top">
+                        <img class="fc-icon" src="/search.svg" alt="">
+                        <span class="fc-kicker">Tool</span>
+                    </div>
+                    <h3>Search</h3>
+                    <p>Look up any U.S. nonprofit and pull its mission, Form 990 financials, and efficiency metrics.</p>
+                    <div class="fc-chips">
+                        <span class="fc-chip">Form 990</span>
+                        <span class="fc-chip">Financials</span>
+                        <span class="fc-chip">Efficiency</span>
+                    </div>
+                    <span class="fc-cta">Open Search <span class="arrow" aria-hidden="true">→</span></span>
                 </a>
-                <a class="tool-tile" href="https://grants.noprofits.org" target="_blank" rel="noopener">
-                    <img src="/visualize.svg" alt="">
-                    <span>Grants</span>
-                </a>
-                <a class="tool-tile" href="https://blog.noprofits.org" target="_blank" rel="noopener">
-                    <img src="/blog.svg" alt="">
-                    <span>Blog</span>
-                </a>
-            </div>
 
-            <div class="card-grid">
-                <article class="card">
-                    <h3>Search Tool</h3>
-                    <p>Access detailed nonprofit data through our search platform at <a href="https://search.noprofits.org" target="_blank" rel="noopener">search.noprofits.org</a>.</p>
-                </article>
-                <article class="card">
-                    <h3>Grant Visualizer</h3>
-                    <p>Analyze funding patterns with our visualization tool at <a href="https://grants.noprofits.org" target="_blank" rel="noopener">grants.noprofits.org</a>.</p>
-                </article>
-                <article class="card">
+                <a class="feature-card" href="https://grants.noprofits.org" target="_blank" rel="noopener">
+                    <div class="fc-top">
+                        <img class="fc-icon" src="/visualize.svg" alt="">
+                        <span class="fc-kicker">Visualizer</span>
+                    </div>
+                    <h3>Grants</h3>
+                    <p>Trace how grant funding moves between organizations — grantor to grantee — as an interactive map.</p>
+                    <div class="fc-chips">
+                        <span class="fc-chip">Funding flows</span>
+                        <span class="fc-chip">Grantor → grantee</span>
+                    </div>
+                    <span class="fc-cta">Open Grants <span class="arrow" aria-hidden="true">→</span></span>
+                </a>
+
+                <a class="feature-card" href="https://blog.noprofits.org" target="_blank" rel="noopener">
+                    <div class="fc-top">
+                        <img class="fc-icon" src="/blog.svg" alt="">
+                        <span class="fc-kicker">Writing</span>
+                    </div>
                     <h3>Blog</h3>
-                    <p>Read in-depth analyses and updates on nonprofit trends at <a href="https://blog.noprofits.org" target="_blank" rel="noopener">blog.noprofits.org</a>.</p>
-                </article>
+                    <p>Field notes on nonprofit data, automation, and the command line.</p>
+                    <p class="fc-preview" id="home-blog-preview"></p>
+                    <span class="fc-cta">Read the blog <span class="arrow" aria-hidden="true">→</span></span>
+                </a>
             </div>
         </section>
 

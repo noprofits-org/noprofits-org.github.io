@@ -104,7 +104,7 @@ body {
 }
 
 /* Smooth theme transition on color-bearing surfaces */
-body, .card, .tool-tile, .site-header, .nav-list a,
+body, .card, .feature-card, .site-header, .nav-list a,
 .section-head, .hero, .contact-mail, .resource-list > li {
     transition: background-color 0.28s var(--ease),
                 border-color 0.28s var(--ease),
@@ -442,48 +442,137 @@ a:hover {
     line-height: 1.6;
 }
 
-/* ---------- Quick-link tool tiles ---------- */
-.tool-tiles {
+/* ---------- Home feature cards ---------- */
+.feature-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0;
+    grid-template-columns: 1fr;
+    gap: 1.1rem;
     margin: clamp(2.25rem, 5vw, 3rem) 0 0;
-    border: 1px solid var(--line2);
-    border-right: none;
 }
 
-.tool-tile {
+.feature-card {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    padding: 1.5rem 0.75rem;
+    padding: 1.5rem 1.5rem 1.6rem;
     background: var(--panel);
-    border-right: 1px solid var(--line2);
+    border: 1px solid var(--line);
     color: var(--fg);
-    text-align: center;
-    transition: background-color 0.2s var(--ease), color 0.2s var(--ease);
+    transition: background-color 0.2s var(--ease), border-color 0.2s var(--ease), transform 0.2s var(--ease);
 }
 
-.tool-tile:hover {
+.feature-card:hover {
     background: var(--bg-soft);
-    color: var(--fg);
+    border-color: var(--line2);
+    transform: translateY(-2px);
 }
 
-.tool-tile img {
-    width: 34px;
-    height: 34px;
+.fc-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.05rem;
 }
 
-.tool-tile span {
+.fc-icon { width: 30px; height: 30px; }
+
+.fc-kicker {
     font-family: var(--font-label);
     font-weight: 800;
     text-transform: uppercase;
-    font-size: 12.5px;
-    letter-spacing: 0.14em;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: var(--accent-text);
+}
+
+.feature-card h3 { margin: 0 0 0.5rem; }
+
+.feature-card > p {
+    color: var(--fg-soft);
+    font-size: 0.95rem;
+    line-height: 1.55;
+    margin: 0 0 1.15rem;
+}
+
+.fc-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 1.4rem;
+}
+
+.fc-chip {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.03em;
+    color: var(--chip-fg);
+    background: var(--chip-bg);
+    padding: 4px 8px;
+    white-space: nowrap;
+}
+
+/* Live "latest post" preview inside the Blog card */
+.fc-preview {
+    display: none;
+    flex-direction: column;
+    gap: 3px;
+    margin: 0 0 1.4rem;
+    padding: 0.75rem 0 0;
+    border-top: 1px solid var(--line);
+}
+
+.fc-preview.is-loaded { display: flex; }
+
+.fc-preview-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--fg-faint);
+}
+
+.fc-preview-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 1.14;
     color: var(--fg);
 }
+
+.fc-preview-date {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--fg-faint);
+}
+
+/* Button-style call to action */
+.fc-cta {
+    margin-top: auto;
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-label);
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    color: var(--fg);
+    border: 1.5px solid var(--rule);
+    padding: 9px 16px;
+    transition: background-color 0.15s var(--ease), color 0.15s var(--ease), border-color 0.15s var(--ease);
+}
+
+.fc-cta .arrow { transition: transform 0.15s var(--ease); }
+
+.feature-card:hover .fc-cta {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #F6F2EA;
+}
+
+[data-theme="dark"] .feature-card:hover .fc-cta { color: #141310; }
+
+.feature-card:hover .fc-cta .arrow { transform: translateX(3px); }
 
 /* ---------- Main + sections ---------- */
 main { padding-bottom: 3.5rem; }
@@ -865,6 +954,11 @@ main p { color: var(--fg-soft); }
 @media (min-width: 720px) {
     .card-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+
+    .feature-grid {
+        grid-template-columns: repeat(3, 1fr);
         gap: 1.25rem;
     }
 }
