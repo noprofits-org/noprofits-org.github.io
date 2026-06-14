@@ -22,6 +22,7 @@ const NoProfits = (() => {
     tabLinks: null,
     tabContents: null,
     themeToggle: null,
+    themeSegBtns: null,
     mobileOverlay: null
   };
 
@@ -34,6 +35,9 @@ const NoProfits = (() => {
     DOM.tabLinks = document.querySelectorAll(CONFIG.TAB_SELECTOR);
     DOM.tabContents = document.querySelectorAll(CONFIG.TAB_CONTENT_SELECTOR);
     DOM.themeToggle = document.getElementById('theme-toggle');
+    DOM.themeSegBtns = DOM.themeToggle
+      ? DOM.themeToggle.querySelectorAll('.seg-btn')
+      : [];
     DOM.mobileOverlay = document.getElementById('mobile-overlay');
   }
 
@@ -242,21 +246,25 @@ const NoProfits = (() => {
   }
 
   /**
-   * Sets the theme and updates UI
+   * Sets the theme and updates the segmented control's active state
    * @param {string} theme - 'light' or 'dark'
    */
   function setTheme(theme) {
     if (theme === 'dark') {
       document.documentElement.setAttribute('data-theme', 'dark');
-      if (DOM.themeToggle) {
-        DOM.themeToggle.setAttribute('aria-label', 'Switch to light mode');
-      }
     } else {
       document.documentElement.removeAttribute('data-theme');
-      if (DOM.themeToggle) {
-        DOM.themeToggle.setAttribute('aria-label', 'Switch to dark mode');
-      }
     }
+
+    // Reflect state on the Light/Dark segmented control
+    if (DOM.themeSegBtns) {
+      DOM.themeSegBtns.forEach(btn => {
+        const isActive = btn.getAttribute('data-theme-set') === theme;
+        btn.classList.toggle(CONFIG.ACTIVE_CLASS, isActive);
+        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+    }
+
     localStorage.setItem('theme', theme);
   }
 
@@ -265,27 +273,27 @@ const NoProfits = (() => {
    */
   function toggleTheme() {
     const currentTheme = document.documentElement.hasAttribute('data-theme') ? 'dark' : 'light';
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
+    setTheme(currentTheme === 'dark' ? 'light' : 'dark');
   }
 
   /**
-   * Initializes the theme toggle button
+   * Initializes the Light/Dark segmented control
    */
   function initThemeToggle() {
     if (!DOM.themeToggle) {
-      console.warn('Theme toggle button not found');
+      console.warn('Theme control not found');
       return;
     }
 
-    // Set initial theme
-    const initialTheme = getCurrentTheme();
-    setTheme(initialTheme);
+    // Set initial theme (also paints the active segment)
+    setTheme(getCurrentTheme());
 
-    // Add click listener
-    DOM.themeToggle.addEventListener('click', toggleTheme);
+    // Each segment selects its theme explicitly
+    DOM.themeSegBtns.forEach(btn => {
+      btn.addEventListener('click', () => setTheme(btn.getAttribute('data-theme-set')));
+    });
 
-    // Listen for system theme changes
+    // Follow the system preference until the user makes an explicit choice
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
       if (!localStorage.getItem('theme')) {
         setTheme(e.matches ? 'dark' : 'light');

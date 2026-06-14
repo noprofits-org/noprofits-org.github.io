@@ -98,6 +98,7 @@ body {
     background: var(--bg);
     min-height: 100vh;
     min-height: 100dvh;
+    overflow-x: clip; /* contain the full-bleed hero without a horizontal scrollbar */
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
 }
@@ -234,7 +235,7 @@ a:hover {
 
 .wordmark .dim {
     color: #8C8A82;
-    margin-left: 4px;
+    margin-left: 7px;
     font-weight: 900;
 }
 
@@ -292,9 +293,35 @@ a:hover {
     stroke-linejoin: round;
 }
 
-.theme-toggle .icon-sun { display: none; }
-[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
-[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+/* Light/Dark segmented control (masthead) */
+.theme-seg {
+    display: flex;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.seg-btn {
+    padding: 6px 14px;
+    font-family: var(--font-label);
+    font-weight: 800;
+    font-size: 10.5px;
+    line-height: 1;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    background: transparent;
+    color: #9A988F;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.15s var(--ease), color 0.15s var(--ease);
+}
+
+.seg-btn:hover { color: #EDEBE6; }
+
+.seg-btn.active {
+    background: #F6F2EA;
+    color: #16140F;
+}
+
+.seg-btn.active:hover { color: #16140F; }
 
 /* Hamburger */
 .hamburger { position: relative; }
@@ -371,13 +398,21 @@ a:hover {
     color: var(--fg);
 }
 
-/* ---------- Hero (editorial) ---------- */
+/* ---------- Hero (editorial, full-bleed band) ---------- */
 .hero {
     background: var(--bg-soft);
     border-bottom: 1px solid var(--line);
-    margin: 0 calc(-1 * var(--gutter)) 0;
-    padding: clamp(2.75rem, 7vw, 4rem) var(--gutter) clamp(2.5rem, 6vw, 3.75rem);
+    /* break out of the centered shell to span the full viewport width */
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    padding: clamp(2.75rem, 6vw, 64px) 0 clamp(2.5rem, 5vw, 60px);
     text-align: left;
+}
+
+.hero-inner {
+    max-width: var(--content-max);
+    margin: 0 auto;
+    padding: 0 var(--gutter);
 }
 
 .eyebrow {
@@ -394,15 +429,16 @@ a:hover {
 }
 
 .hero h1 {
-    margin: 0 0 1.25rem;
-    max-width: 18ch;
+    margin: 0 0 1.375rem;
+    line-height: 1.04;
+    max-width: 17ch;
 }
 
 .hero p {
     color: var(--fg-soft);
-    max-width: 58ch;
+    max-width: 60ch;
     margin: 0;
-    font-size: clamp(1.05rem, 0.4vw + 1rem, 1.15rem);
+    font-size: clamp(1.05rem, 0.4vw + 1rem, 1.0625rem);
     line-height: 1.6;
 }
 
@@ -730,7 +766,7 @@ main p { color: var(--fg-soft); }
     }
 
     .mobile-overlay { display: none !important; }
-    body { overflow: auto !important; }
+    body { overflow-y: auto !important; } /* leave overflow-x: clip intact for the full-bleed hero */
 }
 
 /* ---------- Scrollbar ---------- */

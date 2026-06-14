@@ -49,15 +49,10 @@
                 </ul>
             </nav>
 
-            <button id="theme-toggle" class="icon-btn theme-toggle" aria-label="Toggle dark mode" title="Toggle theme">
-                <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
-                </svg>
-                <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true">
-                    <circle cx="12" cy="12" r="4"/>
-                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
-                </svg>
-            </button>
+            <div id="theme-toggle" class="theme-seg" role="group" aria-label="Color theme">
+                <button type="button" class="seg-btn" data-theme-set="light" aria-pressed="true">Light</button>
+                <button type="button" class="seg-btn" data-theme-set="dark" aria-pressed="false">Dark</button>
+            </div>
 
             <button id="hamburger" class="icon-btn hamburger" aria-label="Menu" aria-expanded="false" aria-controls="nav-list">
                 <span class="bar"></span>
@@ -70,9 +65,11 @@
     <main class="shell">
         <section id="about" class="tab-content active">
             <div class="hero">
-                <div class="eyebrow"><span class="tick" aria-hidden="true"></span>Nonprofit Transparency · Public-Interest Data</div>
-                <h1>Tools for nonprofit insight</h1>
-                <p>Essential resources to enhance transparency and understanding within the nonprofit sector — the data, the tools, and the math left in.</p>
+                <div class="hero-inner">
+                    <div class="eyebrow"><span class="tick" aria-hidden="true"></span>Nonprofit Transparency · Public-Interest Data</div>
+                    <h1>Tools for nonprofit insight</h1>
+                    <p>Essential resources to enhance transparency and understanding within the nonprofit sector — the data, the tools, and the math left in.</p>
+                </div>
             </div>
 
             <div class="tool-tiles">
