@@ -192,7 +192,7 @@ a:hover {
 .site-header {
     position: sticky;
     top: 0;
-    z-index: 50;
+    z-index: 200; /* above mobile overlay (90) so the open drawer is not trapped below it */
     background: var(--ink-surface);
     border-bottom: 1px solid rgba(255, 255, 255, 0.10);
 }
@@ -240,7 +240,9 @@ a:hover {
 }
 
 /* Desktop nav (Barlow condensed caps) */
-.nav { display: none; }
+/* Wrapper is transparent to layout so the off-canvas drawer (its child) can
+   still render on mobile; the inline nav row is restored on desktop below. */
+.nav { display: contents; }
 
 .nav-list {
     list-style: none;
@@ -359,43 +361,42 @@ a:hover {
     pointer-events: auto;
 }
 
-#nav-list {
-    position: fixed;
-    top: 0;
-    right: 0;
-    height: 100vh;
-    height: 100dvh;
-    width: min(86vw, 320px);
-    background: var(--bg-soft);
-    border-left: 1px solid var(--line2);
-    transform: translateX(100%);
-    transition: transform 0.3s var(--ease);
-    z-index: 100;
-    overflow-y: auto;
-    padding: 5rem 0 1.5rem;
-}
+@media (max-width: 879.98px) {
+    #nav-list {
+        position: fixed;
+        top: 62px; /* sit below the sticky masthead so the close (X) stays tappable */
+        right: 0;
+        height: calc(100vh - 62px);
+        height: calc(100dvh - 62px);
+        width: min(86vw, 320px);
+        background: var(--bg-soft);
+        border-left: 1px solid var(--line2);
+        transform: translateX(100%);
+        transition: transform 0.3s var(--ease);
+        z-index: 100;
+        overflow-y: auto;
+        padding: 1.5rem 0;
+        flex-direction: column;
+        gap: 0;
+        align-items: stretch;
+    }
 
-#nav-list.show { transform: translateX(0); }
+    #nav-list.show { transform: translateX(0); }
 
-#nav-list .nav-list {
-    flex-direction: column;
-    gap: 0;
-    align-items: stretch;
-}
+    #nav-list a {
+        padding: 0.95rem 1.6rem;
+        font-size: 15px;
+        color: var(--fg-soft);
+        border-left: 3px solid transparent;
+    }
 
-#nav-list .nav-list a {
-    padding: 0.95rem 1.6rem;
-    font-size: 15px;
-    color: var(--fg-soft);
-    border-left: 3px solid transparent;
-}
+    #nav-list a:hover { color: var(--fg); }
 
-#nav-list .nav-list a:hover { color: var(--fg); }
-
-#nav-list .nav-list a.active {
-    border-left-color: var(--accent);
-    background: var(--bg-soft2);
-    color: var(--fg);
+    #nav-list a.active {
+        border-left-color: var(--accent);
+        background: var(--bg-soft2);
+        color: var(--fg);
+    }
 }
 
 /* ---------- Hero (editorial, full-bleed band) ---------- */
@@ -969,17 +970,6 @@ main p { color: var(--fg-soft); }
 @media (min-width: 880px) {
     .hamburger { display: none; }
     .nav { display: block; }
-
-    #nav-list {
-        position: static;
-        height: auto;
-        width: auto;
-        background: transparent;
-        border-left: none;
-        transform: none;
-        overflow: visible;
-        padding: 0;
-    }
 
     .mobile-overlay { display: none !important; }
     body { overflow-y: auto !important; } /* leave overflow-x: clip intact for the full-bleed hero */
