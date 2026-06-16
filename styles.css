@@ -993,3 +993,165 @@ main p { color: var(--fg-soft); }
     border: 2px solid var(--bg);
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--fg-faint); }
+
+/* ============================================
+   Résumé tab
+   ============================================ */
+.resume-head {
+    padding-bottom: 1.6rem;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 0.5rem;
+}
+
+.resume-name {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(2.1rem, 4vw + 1rem, 3.1rem);
+    line-height: 1.02;
+    margin: 0 0 0.35rem;
+}
+
+.resume-name .resume-pip { color: var(--accent-text); font-weight: 700; }
+
+.resume-role {
+    font-family: var(--font-label);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: clamp(0.95rem, 0.6vw + 0.8rem, 1.1rem);
+    color: var(--fg);
+    margin: 0 0 0.9rem;
+}
+
+.resume-contact {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--fg-soft);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 1.4rem;
+}
+
+.resume-contact a { color: var(--fg-soft); text-decoration: none; border-bottom: 1px solid var(--line2); }
+.resume-contact a:hover { color: var(--accent-text); border-bottom-color: var(--accent-text); }
+.resume-contact .sep { color: var(--fg-faint); }
+
+.resume-dl {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-label);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.8rem;
+    padding: 0.7rem 1.15rem;
+    color: var(--bg);
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    transition: background-color 0.2s var(--ease), transform 0.2s var(--ease), color 0.2s var(--ease);
+}
+
+.resume-dl .arrow { transition: transform 0.2s var(--ease); }
+.resume-dl:hover { transform: translateY(-2px); }
+.resume-dl:hover .arrow { transform: translateY(2px); }
+
+[data-theme="dark"] .resume-dl { color: var(--ink-surface); }
+
+.resume-profile { max-width: 72ch; margin-top: 1.5rem; }
+
+/* Competency cards: tighter, four-up on wide screens */
+.resume-comp .card h3 {
+    font-family: var(--font-label);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.95rem;
+}
+
+/* Experience */
+.resume-exp { display: flex; flex-direction: column; gap: 1.6rem; }
+
+.resume-job { padding-left: 1rem; border-left: 2px solid var(--line2); }
+
+.resume-job-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.resume-job-head h3 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.18rem;
+    color: var(--fg);
+}
+
+.resume-job-role { color: var(--accent-text); font-weight: 700; }
+
+.resume-when {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--fg-faint);
+    white-space: nowrap;
+}
+
+.resume-job-sum { color: var(--fg-soft); margin-bottom: 0.6rem; font-size: 0.97rem; }
+
+.resume-bullets { list-style: none; display: flex; flex-direction: column; gap: 0.45rem; }
+
+.resume-bullets li {
+    position: relative;
+    padding-left: 1.1rem;
+    color: var(--fg-soft);
+    font-size: 0.95rem;
+    line-height: 1.55;
+}
+
+.resume-bullets li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+}
+
+/* Education / lists */
+.resume-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+.resume-list li { padding-left: 1.1rem; position: relative; color: var(--fg-soft); }
+.resume-list li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.6em;
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+}
+.resume-list strong { color: var(--fg); }
+
+.resume-research { max-width: 72ch; }
+.resume-builtnote { max-width: 68ch; margin-bottom: 1.5rem; }
+
+.resume-portfolio .feature-card h3 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.1rem;
+    margin-bottom: 0.4rem;
+}
+.resume-portfolio .feature-card .fc-chips { margin-top: 0.9rem; }
+
+/* Four-up competencies, two-up portfolio on wide screens */
+@media (min-width: 720px) {
+    .resume-comp { grid-template-columns: 1fr 1fr; }
+    .resume-portfolio { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 1000px) {
+    .resume-comp { grid-template-columns: repeat(2, 1fr); }
+}
