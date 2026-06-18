@@ -1127,6 +1127,23 @@ main p { color: var(--fg-soft); }
 .resume-list strong { color: var(--fg); }
 
 .resume-research { max-width: 72ch; }
+.resume-pubs {
+    max-width: 78ch;
+    margin: 1rem 0 1.6rem;
+    padding-left: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+.resume-pubs li {
+    color: var(--fg-soft);
+    font-size: 0.93rem;
+    line-height: 1.45;
+    padding-left: 0.3rem;
+}
+.resume-pubs li::marker { color: var(--accent); font-variant-numeric: tabular-nums; }
+.resume-pubs .pub-title { color: var(--fg); }
+.resume-pubs .pub-venue { font-style: italic; }
 .resume-builtnote { max-width: 68ch; margin-bottom: 1.5rem; }
 
 .resume-portfolio .feature-card h3 {
