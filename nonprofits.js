@@ -367,6 +367,20 @@ const NoProfits = (() => {
     return `${MONTHS[dt.getUTCMonth()]} ${String(dt.getUTCDate()).padStart(2, '0')}, ${dt.getUTCFullYear()}`;
   }
 
+  // Atom <summary type="html"> carries the post body as an HTML string, so its
+  // .textContent is literal markup (<p>…</p>, the chart <svg>, etc.). Parse it
+  // and pull the rendered text so we show prose, not tags. DOMParser does not
+  // execute scripts, and we only ever assign the result via .textContent, so
+  // this stays injection-safe.
+  const MAX_EXCERPT = 200;
+  function summaryToExcerpt(html) {
+    if (!html) return '';
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const text = (doc.body.textContent || '').replace(/\s+/g, ' ').trim();
+    if (text.length <= MAX_EXCERPT) return text;
+    return text.slice(0, MAX_EXCERPT).replace(/\s+\S*$/, '') + '…';
+  }
+
   /**
    * Renders Atom <entry> elements as editorial post rows (first is featured).
    * Uses textContent throughout so feed data can never inject markup.
@@ -400,7 +414,7 @@ const NoProfits = (() => {
       title.textContent = titleEl ? titleEl.textContent.trim() : 'Untitled';
       main.appendChild(title);
 
-      const excerptText = summaryEl ? summaryEl.textContent.trim() : '';
+      const excerptText = summaryEl ? summaryToExcerpt(summaryEl.textContent) : '';
       if (excerptText) {
         const excerpt = document.createElement('span');
         excerpt.className = 'post-excerpt';
