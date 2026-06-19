@@ -1162,3 +1162,49 @@ main p { color: var(--fg-soft); }
 @media (min-width: 1000px) {
     .resume-comp { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ============================================
+   PRINT — render the résumé straight from the
+   site's own #resume section, so the printed /
+   downloaded PDF can never drift from the page.
+   ============================================ */
+@media print {
+    @page { size: letter; margin: 0.5in; }
+
+    /* force the light palette even if the viewer is in dark mode */
+    :root,
+    [data-theme="dark"] {
+        --bg: #FFFFFF;   --bg-soft: #F6F2EA; --bg-soft2: #F1EBDF; --panel: #FBF9F4;
+        --fg: #16140F;   --fg-soft: #54565A; --fg-faint: #8C8E90;
+        --line: #E4DFD5; --line2: #D7D1C5;   --rule: #16140F;
+        --accent: #362C17; --accent-text: #6A5526;
+        --chip-bg: #EFE9DD; --chip-fg: #5A4A28;
+    }
+
+    html, body { background: #FFFFFF !important; color: var(--fg) !important; }
+
+    /* hide site chrome and every non-résumé tab */
+    .site-header, .site-footer, #mobile-overlay,
+    #about, #mission, #resources, #metrics, #blog, #contact { display: none !important; }
+
+    /* always show the résumé regardless of which tab is active on screen */
+    #resume.tab-content { display: block !important; animation: none !important; }
+
+    main { padding: 0 !important; }
+    .shell { max-width: none !important; padding: 0 !important; }
+
+    /* the on-screen-only download button has no place on the page itself */
+    .resume-dl { display: none !important; }
+
+    /* don't split a job, a competency, or a portfolio card across pages */
+    .resume-job, .feature-card, .card { break-inside: avoid; }
+    .resume-pubs li { break-inside: avoid; }
+
+    a { color: var(--fg) !important; text-decoration: none !important; border: none !important; }
+
+    /* keep cream blocks / cards visible in print */
+    .cream-block, .card, .feature-card, .resume-comp {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
