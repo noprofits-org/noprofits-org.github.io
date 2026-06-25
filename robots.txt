@@ -1,0 +1,5 @@
+# noprofits.org — apex landing page.
+User-agent: *
+Allow: /
+
+Sitemap: https://noprofits.org/sitemap.xml
