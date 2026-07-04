@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Header brandmark — the favicon emblem with a TRANSPARENT background.
+  Identical to favicon.svg except the cream disc (.st1 fill #f7f4ee) is set to
+  `none` so the mark reads cleanly over any header background. Keep in sync with
+  public/favicon.svg if the source artwork changes.
+-->
 <svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 441.05 441.73">
-  <!-- Generator: Adobe Illustrator 30.5.1, SVG Export Plug-In . SVG Version: 2.1.4 Build 3)  -->
   <defs>
     <style>
       .st0 {
@@ -8,7 +13,7 @@
       }
 
       .st1 {
-        fill: #f7f4ee;
+        fill: none;
       }
 
       .st2 {

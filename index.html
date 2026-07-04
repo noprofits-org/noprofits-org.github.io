@@ -5,47 +5,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="description" content="NoProfits.org — tools and insights for nonprofit transparency.">
-    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#141310" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#F7F4EE" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#121A16" media="(prefers-color-scheme: dark)">
     <title>NoProfits.org — Nonprofit Transparency</title>
     <link rel="icon" href="/favicon.svg">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap">
-    <link rel="stylesheet" href="styles.css">
+
+    <!-- Open Graph / social -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="NoProfits.org">
+    <meta property="og:title" content="NoProfits.org — Nonprofit Transparency">
+    <meta property="og:description" content="NoProfits.org — tools and insights for nonprofit transparency.">
+    <meta property="og:url" content="https://www.noprofits.org/">
+    <meta property="og:image" content="https://www.noprofits.org/og-image.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="noprofits.org — tools and field notes for nonprofit transparency">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="NoProfits.org — Nonprofit Transparency">
+    <meta name="twitter:description" content="NoProfits.org — tools and insights for nonprofit transparency.">
+    <meta name="twitter:image" content="https://www.noprofits.org/og-image.png">
+
+    <!-- No-flash theme: set an explicit data-theme BEFORE any stylesheet. -->
     <script>
-        // Apply theme before paint to avoid flash
         (function () {
             try {
-                var saved = localStorage.getItem('theme');
-                var dark = saved
-                    ? saved === 'dark'
-                    : window.matchMedia('(prefers-color-scheme: dark)').matches;
-                if (dark) document.documentElement.setAttribute('data-theme', 'dark');
-            } catch (e) {}
+                var t = localStorage.getItem('theme');
+                if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
         })();
     </script>
+    <link rel="preload" href="/fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/hanken-grotesk.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="noprofits-theme.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
     <div id="mobile-overlay" class="mobile-overlay"></div>
 
-    <header class="site-header">
-        <div class="shell">
-            <a href="#about" class="brand tab-link" data-tab="about">
-                <span class="brand-tick" aria-hidden="true"></span>
-                <span class="wordmark">NoProfits<span class="dim">.org</span></span>
+    <header class="np-header">
+        <div class="np-container np-header__bar">
+            <a href="#about" class="np-header__brand brand tab-link" data-tab="about" aria-label="NoProfits.org home">
+                <img src="/brandmark.svg" alt="" class="np-brandmark" width="32" height="32" aria-hidden="true">
+                <span class="np-wordmark">noprofits<span class="np-wordmark__tld">.org</span></span>
             </a>
 
-            <nav class="nav" aria-label="Main navigation">
+            <nav class="nav np-nav" aria-label="Main navigation">
                 <ul id="nav-list" class="nav-list" role="tablist">
-                    <li><a href="#about"     class="tab-link active" data-tab="about">Home</a></li>
-                    <li><a href="#mission"   class="tab-link" data-tab="mission">Mission</a></li>
-                    <li><a href="#resources" class="tab-link" data-tab="resources">Resources</a></li>
-                    <li><a href="#metrics"   class="tab-link" data-tab="metrics">Metrics</a></li>
-                    <li><a href="#blog"      class="tab-link" data-tab="blog">Blog</a></li>
-                    <li><a href="#resume"    class="tab-link" data-tab="resume">Résumé</a></li>
-                    <li><a href="#contact"   class="tab-link" data-tab="contact">Contact</a></li>
+                    <li><a href="#about"     class="tab-link np-nav__link active" data-tab="about">Home</a></li>
+                    <li><a href="#mission"   class="tab-link np-nav__link" data-tab="mission">Mission</a></li>
+                    <li><a href="#resources" class="tab-link np-nav__link" data-tab="resources">Resources</a></li>
+                    <li><a href="#metrics"   class="tab-link np-nav__link" data-tab="metrics">Metrics</a></li>
+                    <li><a href="#blog"      class="tab-link np-nav__link" data-tab="blog">Blog</a></li>
+                    <li><a href="#resume"    class="tab-link np-nav__link" data-tab="resume">Résumé</a></li>
+                    <li><a href="#contact"   class="tab-link np-nav__link" data-tab="contact">Contact</a></li>
                 </ul>
             </nav>
 
@@ -54,7 +69,7 @@
                 <button type="button" class="seg-btn" data-theme-set="dark" aria-pressed="false">Dark</button>
             </div>
 
-            <button id="hamburger" class="icon-btn hamburger" aria-label="Menu" aria-expanded="false" aria-controls="nav-list">
+            <button id="hamburger" class="np-header__toggle hamburger" aria-label="Menu" aria-expanded="false" aria-controls="nav-list">
                 <span class="bar"></span>
                 <span class="bar"></span>
                 <span class="bar"></span>
@@ -235,7 +250,7 @@
                     <span class="sep" aria-hidden="true">·</span>
                     <a href="https://github.com/noprofits-org" target="_blank" rel="noopener">github.com/noprofits-org</a>
                 </p>
-                <a class="resume-dl" href="/Peter_Johnston_Resume.pdf" download>
+                <a class="resume-dl np-btn np-btn-primary" href="/Peter_Johnston_Resume.pdf" download>
                     Download PDF <span class="arrow" aria-hidden="true">↓</span>
                 </a>
             </div>
@@ -394,32 +409,34 @@
         </section>
     </main>
 
-    <footer class="site-footer">
-        <div class="shell footer-inner">
-            <div class="footer-brand">
-                <div class="footer-mark">
-                    <span class="tick" aria-hidden="true"></span>
-                    <span class="wordmark">NoProfits<span class="dim">.org</span></span>
+    <footer class="np-footer">
+        <div class="np-container np-footer__top">
+            <div class="np-footer__brand">
+                <div class="np-footer__lockup">
+                    <span class="np-footer__mark" aria-hidden="true">n</span>
+                    <span class="np-footer__word">noprofits.org</span>
                 </div>
-                <p>Tools and field notes for nonprofit transparency — public-interest data, automation, and the command line.</p>
+                <p class="np-footer__blurb">Tools and field notes for nonprofit transparency — public-interest data, automation, and the command line.</p>
             </div>
-            <nav class="footer-cols" aria-label="Footer">
-                <div class="footer-col">
-                    <span class="footer-h">Tools</span>
-                    <a href="https://search.noprofits.org" target="_blank" rel="noopener">Search</a>
-                    <a href="https://grants.noprofits.org" target="_blank" rel="noopener">Grants</a>
-                    <a href="https://blog.noprofits.org" target="_blank" rel="noopener">Blog</a>
+            <nav class="np-footer__cols" aria-label="Footer">
+                <div class="np-footer__col">
+                    <p class="np-footer__heading">Tools</p>
+                    <a href="https://search.noprofits.org" class="np-footer__link" target="_blank" rel="noopener">Search</a>
+                    <a href="https://grants.noprofits.org" class="np-footer__link" target="_blank" rel="noopener">Grants</a>
+                    <a href="https://blog.noprofits.org" class="np-footer__link" target="_blank" rel="noopener">Blog</a>
                 </div>
-                <div class="footer-col">
-                    <span class="footer-h">Elsewhere</span>
-                    <a href="https://github.com/noprofits-org" target="_blank" rel="noopener">github.com/noprofits-org</a>
-                    <a href="mailto:peter@noprofits.org">peter@noprofits.org</a>
+                <div class="np-footer__col">
+                    <p class="np-footer__heading">Elsewhere</p>
+                    <a href="https://github.com/noprofits-org" class="np-footer__link" target="_blank" rel="noopener">github.com/noprofits-org</a>
+                    <a href="mailto:peter@noprofits.org" class="np-footer__link">peter@noprofits.org</a>
                 </div>
             </nav>
         </div>
-        <div class="shell footer-base">
-            <span>© 2025 NOPROFITS.ORG · BSD-3-CLAUSE</span>
-            <span>BUILT ON GITHUB PAGES</span>
+        <div class="np-footer__legalwrap">
+            <div class="np-container np-footer__legal">
+                <span>© 2026 noprofits.org · BSD-3-Clause</span>
+                <span>Built on GitHub Pages</span>
+            </div>
         </div>
     </footer>
 
