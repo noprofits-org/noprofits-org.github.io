@@ -1,0 +1,671 @@
+/* vendored from noprofits-web-engineering/theme — v1.0.0 — do not edit here */
+/* =============================================================================
+   noprofits-theme v1.0.0 — canonical shared design system for the noprofits
+   family: www / blog / search / grants (+ web-engineering, the design source).
+
+   CANONICAL HOME: noprofits-web-engineering/theme/noprofits-theme.css
+   Every other repo holds a VENDORED COPY — never edit a copy in place; change
+   this file, bump the version, and re-vendor to all four sites together.
+
+   Derived from web-engineering's global.css (Color Spec "Sky" palette, AA
+   contrast values pre-audited) plus a new dark companion palette grown from
+   the spec's own ink/forest dark-section colors.
+
+   Theme model: <html data-theme="light|dark">. Light is default. Components
+   never branch on theme — dark redefines the same tokens.
+   Fonts: self-hosted /fonts/bricolage-grotesque.woff2 + hanken-grotesk.woff2
+   (vendor both files with this stylesheet; do not use Google Fonts links).
+   ============================================================================= */
+
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('/fonts/bricolage-grotesque.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/hanken-grotesk.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* -----------------------------------------------------------------------------
+   TOKENS — LIGHT (default). Values per the Color Spec ("Sky" accent).
+   ----------------------------------------------------------------------------- */
+:root {
+  /* Accent (swappable pair — defining these two themes the site) */
+  --accent: #2F7DA3;        /* Sky */
+  --accent-deep: #1C5572;   /* Sky Deep — eyebrows/links on light bg */
+  --on-accent: #FFFFFF;     /* text on accent-filled surfaces */
+
+  /* Sky supporting */
+  --sky-mid: #5B9FC0;
+  --sky-soft: #CFE6EF;
+  --sky-tint: #EAF3F7;
+
+  /* Forest (dark sections) + mint (numeric accent on dark) */
+  --forest: #143F33;
+  --forest-soft: #1D5A48;
+  --mint: #9FD0BF;
+
+  /* Terracotta — decorative accent marks only */
+  --terracotta: #C8632E;
+  --req: #B0551F;           /* required-asterisk: darkened for AA on cream */
+
+  /* Warm neutral surfaces */
+  --cream: #F7F4EE;         /* page background */
+  --offwhite: #FBFAF6;      /* panels */
+  --white: #FFFFFF;         /* cards / inputs / raised surfaces */
+  --border: #ECE6DA;
+  --border-strong: #DCD5C8;
+  --header-veil: rgba(247, 244, 238, 0.85);
+
+  /* Ink & text. --ink is the DARK SURFACE (footer/dark sections) and stays
+     dark in both themes; --text is body copy and flips in dark. */
+  --ink: #16221D;
+  --text: #16221D;
+  --slate: #43504A;         /* ~8.6:1 on white */
+  --muted: #5A665F;         /* ~5.9:1 on white */
+  --faint: #67726B;         /* quietest tier, still AA (~4.6:1) */
+  --on-ink-quiet: #9BA39C;  /* quiet text on --ink surfaces (~5.6:1) */
+
+  /* Layout */
+  --container: 1180px;
+
+  color-scheme: light;
+}
+
+/* -----------------------------------------------------------------------------
+   TOKENS — DARK companion. Grown from the spec's ink/forest register.
+   Same names; components never branch.
+   ----------------------------------------------------------------------------- */
+[data-theme='dark'] {
+  --accent: #5B9FC0;        /* lifted sky — ~6.0:1 on page bg */
+  --accent-deep: #9CC8DE;   /* eyebrow/link tier on dark (~9.9:1) */
+  --on-accent: #0F1A14;
+
+  --sky-mid: #5B9FC0;
+  --sky-soft: #24404F;      /* selection / tint fills, dark register */
+  --sky-tint: #1A2A33;
+
+  --forest: #143F33;
+  --forest-soft: #1D5A48;
+  --mint: #9FD0BF;
+
+  --terracotta: #D97E4A;
+  --req: #E08A57;
+
+  --cream: #121A16;         /* page background */
+  --offwhite: #18231E;      /* panels */
+  --white: #1E2A24;         /* cards / inputs / raised surfaces */
+  --border: #26332C;
+  --border-strong: #32403A;
+  --header-veil: rgba(18, 26, 22, 0.85);
+
+  --ink: #0E1512;           /* footer/dark sections sit below the page */
+  --text: #E9ECE8;
+  --slate: #C2CCC6;
+  --muted: #9DAAA3;         /* ~7.3:1 */
+  --faint: #8A968F;         /* ~5.8:1 */
+  --on-ink-quiet: #9BA39C;
+
+  color-scheme: dark;
+}
+
+/* -----------------------------------------------------------------------------
+   BASE
+   ----------------------------------------------------------------------------- */
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+  color: var(--text);
+  background: var(--cream);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden; /* never let a tight element force horizontal scroll */
+}
+
+img { max-width: 100%; height: auto; }
+
+::selection { background: var(--sky-soft); }
+
+/* Skip link — hidden until focused, then pinned top-left. */
+.np-skiplink {
+  position: absolute;
+  left: 8px;
+  top: -60px;
+  z-index: 200;
+  background: var(--accent-deep);
+  color: var(--cream);
+  font-weight: 600;
+  font-size: 15px;
+  padding: 10px 16px;
+  border-radius: 0 0 10px 10px;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+.np-skiplink:focus {
+  top: 0;
+  outline: 2px solid var(--cream);
+  outline-offset: 2px;
+}
+
+:target { scroll-margin-top: 84px; }
+#main { scroll-margin-top: 0; }
+
+@keyframes npFadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* Transform-only entrance for LCP elements — never animate opacity from 0
+   on the LCP or its paint (and the LCP timestamp) is deferred. */
+@keyframes npRiseUp {
+  from { transform: translateY(14px); }
+  to { transform: translateY(0); }
+}
+
+.np-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* -----------------------------------------------------------------------------
+   LAYOUT — container + section rhythm
+   ----------------------------------------------------------------------------- */
+.np-container {
+  width: 100%;
+  max-width: var(--container);
+  margin: 0 auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+@media (min-width: 600px) {
+  .np-container { padding-left: 28px; padding-right: 28px; }
+}
+@media (min-width: 900px) {
+  .np-container { padding-left: 32px; padding-right: 32px; }
+}
+
+.np-section { padding-top: 56px; padding-bottom: 56px; }
+@media (min-width: 900px) {
+  .np-section { padding-top: 96px; padding-bottom: 96px; }
+}
+
+/* -----------------------------------------------------------------------------
+   TYPE SCALE — Bricolage Grotesque display / Hanken Grotesk body.
+   Body min 16px everywhere (prevents iOS zoom-on-focus).
+   ----------------------------------------------------------------------------- */
+.np-h1 {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 800;
+  font-size: 32px;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  margin: 22px 0 0;
+  text-wrap: balance;
+}
+.np-h2 {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  margin: 10px 0 0;
+  text-wrap: balance;
+}
+.np-h3 {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1.25;
+}
+.np-lead {
+  font-size: 17px;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+.np-eyebrow {
+  color: var(--accent-deep);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0;
+}
+@media (min-width: 900px) {
+  .np-h1 { font-size: 56px; line-height: 1.04; }
+  .np-h2 { font-size: 40px; }
+  .np-h3 { font-size: 19px; }
+  .np-lead { font-size: 19px; }
+}
+
+/* -----------------------------------------------------------------------------
+   BUTTONS — ≥44px tall; full-width on mobile, auto at Small+.
+   ----------------------------------------------------------------------------- */
+.np-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 16px;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  border-radius: 12px;
+  padding: 15px 26px;
+  min-height: 48px;
+  width: 100%;
+}
+@media (min-width: 600px) {
+  .np-btn { width: auto; }
+}
+.np-btn-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 8px 20px -8px rgba(20, 63, 51, 0.55);
+}
+.np-btn-secondary {
+  background: var(--white);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+}
+
+/* -----------------------------------------------------------------------------
+   FORMS — full-width inputs, ≥48px tall, 16px text (no iOS zoom).
+   ----------------------------------------------------------------------------- */
+.np-field { display: block; }
+.np-field + .np-field { margin-top: 16px; }
+.np-label {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 7px;
+}
+.np-req { color: var(--req); }
+.np-optional { color: var(--faint); font-weight: 400; }
+.np-input,
+.np-textarea,
+.np-select {
+  width: 100%;
+  padding: 13px 14px;
+  min-height: 48px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  font-size: 16px;
+  font-family: inherit;
+  background: var(--offwhite);
+  color: var(--text);
+}
+.np-textarea { resize: vertical; min-height: 110px; }
+.np-input:focus,
+.np-textarea:focus,
+.np-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(47, 125, 163, 0.16);
+}
+
+/* Visually-hidden honeypot — off-screen, not tabbable, not announced. */
+.np-honeypot {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* -----------------------------------------------------------------------------
+   GRIDS — one column on mobile, expand upward.
+   ----------------------------------------------------------------------------- */
+.np-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 900px) {
+  .np-grid { gap: 24px; }
+}
+@media (min-width: 600px) { .np-grid--3 { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 900px) { .np-grid--3 { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 600px) { .np-grid--4 { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 900px) { .np-grid--4 { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 900px) { .np-grid--2 { grid-template-columns: repeat(2, 1fr); } }
+
+/* -----------------------------------------------------------------------------
+   CARD — shared raised panel (guides, results, tiles).
+   ----------------------------------------------------------------------------- */
+.np-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 22px;
+}
+
+/* -----------------------------------------------------------------------------
+   HEADER CHROME — light sticky bar, brand left, actions right.
+   Markup contract:
+     header.np-header > .np-container.np-header__bar >
+       a.np-header__brand (> img.np-brandmark + span.np-wordmark)
+       [site actions: .np-nav--inline / .np-header__toggle / .np-themetoggle]
+   ----------------------------------------------------------------------------- */
+.np-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--header-veil);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+.np-header__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+.np-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text);
+  margin-right: auto;
+  min-width: 0;
+}
+.np-brandmark { width: 32px; height: 32px; display: block; flex: none; }
+.np-wordmark {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.np-wordmark__tld { color: var(--accent); }
+/* Sub-site suffix, e.g. noprofits.org **search** */
+.np-wordmark__app { color: var(--muted); font-weight: 600; margin-left: 7px; }
+
+@media (max-width: 400px) {
+  .np-header__bar { gap: 10px; }
+  .np-wordmark { font-size: 18px; }
+}
+
+.np-nav--inline { display: none; }
+@media (min-width: 900px) {
+  .np-nav--inline {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 28px;
+  }
+  .np-nav__link {
+    text-decoration: none;
+    color: var(--slate);
+    font-weight: 500;
+    font-size: 15px;
+  }
+  .np-nav__link:hover { color: var(--text); }
+  .np-nav__cta { padding: 10px 18px; font-size: 15px; }
+}
+
+/* Theme toggle — 44px square, shows moon/sun via site markup. */
+.np-themetoggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--text);
+  cursor: pointer;
+  padding: 0;
+  flex: none;
+  font-size: 17px;
+  line-height: 1;
+}
+
+/* Hamburger (mobile) + off-canvas drawer */
+.np-header__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--white);
+  cursor: pointer;
+  padding: 0;
+  flex: none;
+}
+.np-burger,
+.np-burger::before,
+.np-burger::after {
+  content: '';
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+}
+.np-burger { position: relative; }
+.np-burger::before { position: absolute; top: -6px; left: 0; }
+.np-burger::after { position: absolute; top: 6px; left: 0; }
+
+.np-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(20, 20, 20, 0.45);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+.np-scrim.is-open { opacity: 1; visibility: visible; }
+
+.np-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 70;
+  height: 100dvh;
+  width: min(84vw, 340px);
+  background: var(--cream);
+  border-left: 1px solid var(--border);
+  box-shadow: -10px 0 28px rgba(0, 0, 0, 0.16);
+  transform: translateX(100%);
+  visibility: hidden;
+  transition: transform 0.28s ease, visibility 0.28s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 18px calc(env(safe-area-inset-bottom, 0px) + 20px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.np-drawer.is-open { transform: translateX(0); visibility: visible; }
+.np-drawer__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  margin-bottom: 6px;
+}
+.np-drawer__title {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--slate);
+}
+.np-drawer__close {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--white);
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+}
+.np-drawer__close::before,
+.np-drawer__close::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+}
+.np-drawer__close::before { transform: translate(-50%, -50%) rotate(45deg); }
+.np-drawer__close::after { transform: translate(-50%, -50%) rotate(-45deg); }
+
+.np-drawer__link {
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 4px 6px;
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 17px;
+  border-bottom: 1px solid var(--border);
+}
+.np-drawer__cta { margin-top: 16px; }
+
+@media (min-width: 900px) {
+  .np-header__toggle { display: none; }
+  .np-scrim,
+  .np-drawer { display: none; }
+}
+
+body.np-no-scroll { overflow: hidden; }
+
+/* -----------------------------------------------------------------------------
+   FOOTER CHROME — dark-ink surface in BOTH themes.
+   Markup contract:
+     footer.np-footer > .np-container.np-footer__top >
+       .np-footer__brand (lockup + blurb) + .np-footer__cols (cols of links)
+     + .np-footer__legalwrap > .np-container.np-footer__legal
+   ----------------------------------------------------------------------------- */
+.np-footer { background: var(--ink); color: var(--on-ink-quiet); }
+.np-footer__top {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  padding-top: 48px;
+  padding-bottom: 36px;
+}
+.np-footer__brand { max-width: 24em; }
+.np-footer__lockup { display: flex; align-items: center; gap: 10px; }
+.np-footer__mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--mint);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--forest);
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+}
+.np-footer__word {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 700;
+  font-size: 19px;
+  color: #F4F1EA;
+}
+.np-footer__blurb { margin: 16px 0 0; font-size: 15px; line-height: 1.6; }
+
+.np-footer__cols { display: flex; flex-wrap: wrap; gap: 48px; }
+.np-footer__col { display: flex; flex-direction: column; gap: 9px; }
+.np-footer__heading {
+  margin: 0 0 3px;
+  color: #F4F1EA;
+  font-weight: 600;
+  font-size: 14px;
+}
+.np-footer__link {
+  color: #AEB6AF;
+  text-decoration: none;
+  font-size: 15px;
+  min-height: 44px; /* 44px tap target per the Mobile-First spec */
+  display: inline-flex;
+  align-items: center;
+}
+.np-footer__link:hover { color: #F4F1EA; }
+
+.np-footer__legalwrap { border-top: 1px solid #2C3A32; }
+.np-footer__legal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 18px;
+  padding-bottom: 18px;
+  font-size: 13px;
+  color: var(--on-ink-quiet);
+}
+
+@media (min-width: 900px) {
+  .np-footer__top {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 40px;
+    padding-top: 54px;
+    padding-bottom: 40px;
+  }
+  .np-footer__cols { gap: 64px; }
+}
+
+/* -----------------------------------------------------------------------------
+   PRINT — hide app chrome, force white background.
+   ----------------------------------------------------------------------------- */
+@media print {
+  .np-noprint,
+  .np-header,
+  .np-footer,
+  .np-themetoggle { display: none !important; }
+  body { background: #fff !important; color: #16221D !important; }
+}
