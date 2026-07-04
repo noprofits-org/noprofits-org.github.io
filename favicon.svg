@@ -1,33 +1,33 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Cream background to match the editorial palette -->
-  <rect width="32" height="32" fill="#F6F2EA"/>
+  <!-- Cream tile so the mark reads on light and dark browser chrome alike -->
+  <rect width="32" height="32" rx="7" fill="#F7F4EE"/>
 
   <!-- Circle -->
   <circle cx="16" cy="15" r="12"
-        stroke="#16140F"
+        stroke="#2F7DA3"
         stroke-width="3.5"
         fill="none"/>
 
   <!-- S curve -->
   <path d="M24 10c0-3.5-3.5-5-8-5s-8 1.5-8 5 3.5 4.5 8 5c4.5.5 8 1.5 8 5s-3.5 5-8 5-8-1.5-8-5"
-        stroke="#16140F"
+        stroke="#143F33"
         fill="none"
         stroke-width="3.5"
         stroke-linecap="round"/>
 
   <!-- Double vertical lines -->
   <line x1="14" y1="2" x2="14" y2="28"
-        stroke="#16140F"
+        stroke="#143F33"
         stroke-width="2.5"
         stroke-linecap="round"/>
   <line x1="18" y1="2" x2="18" y2="28"
-        stroke="#16140F"
+        stroke="#143F33"
         stroke-width="2.5"
         stroke-linecap="round"/>
 
   <!-- Slash -->
   <line x1="8" y1="23" x2="24" y2="7"
-        stroke="#16140F"
+        stroke="#C8632E"
         stroke-width="3.3"
         stroke-linecap="square"/>
 </svg>
