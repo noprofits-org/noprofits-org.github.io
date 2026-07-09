@@ -134,8 +134,10 @@ const NoProfits = (() => {
       loadBlogPosts();
     }
 
-    // Focus management - focus the tab panel for screen readers
-    tabContent.focus();
+    // Focus management - focus the tab panel for screen readers.
+    // preventScroll keeps the sticky header from covering the panel's top
+    // (a plain focus() scrolls the panel into view and tucks it under the bar).
+    tabContent.focus({ preventScroll: true });
   }
 
   /**
@@ -516,6 +518,21 @@ const NoProfits = (() => {
   }
 
   /**
+   * Wires the "Print résumé" button. The @media print stylesheet reduces the
+   * page to the résumé content, so the browser's print dialog doubles as
+   * "Save as PDF" — no pre-baked PDF to keep in sync.
+   */
+  function initResumePrint() {
+    const btn = document.getElementById('resume-print');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      // Make sure the résumé panel is the active (printable) tab first.
+      switchTab('resume');
+      window.print();
+    });
+  }
+
+  /**
    * Initializes the application
    */
   function init() {
@@ -524,6 +541,7 @@ const NoProfits = (() => {
       initThemeToggle();
       initMobileMenu();
       initTabs();
+      initResumePrint(); // "Print résumé" button on the Résumé tab
       loadBlogPosts(); // populate the Home blog-card preview + Blog tab list
     } catch (error) {
       console.error('Error initializing NoProfits.org:', error);
