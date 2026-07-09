@@ -1,73 +1,63 @@
-# NoProfits.org
+# noprofits.org
 
-A platform for transparency in social services funding.
+The personal site and project hub for **Peter Johnston** — a project &
+operations coordinator who builds office systems and open-source tools for
+nonprofit transparency. Served at [www.noprofits.org](https://www.noprofits.org/)
+via GitHub Pages.
 
-## Project Overview
+This repository is the **landing site** only. It's a single, dependency-free
+static page: résumé, selected work, and links out to the tools and writing that
+live on their own subdomains and in their own repositories.
 
-NoProfits.org is a web application designed to provide transparency and insights into the financial health of nonprofit organizations. Users can search for organizations by name and view details like their mission statement, financial data, and efficiency metrics. The platform also calculates and displays key performance indicators to help users assess the financial well-being and effectiveness of nonprofits.
+## What's here
 
-## Tech Stack
+A hand-written static site — no build step, no framework, no package manager.
+Open `index.html` in a browser and it runs.
 
-* Front-end: HTML, CSS (TailwindCSS), JavaScript (Chart.js)
-* API: ProPublica Nonprofit Explorer API (CORS proxy required for local development)
+| File | Purpose |
+| --- | --- |
+| `index.html` | The whole site — a tabbed single page (Home, Résumé, Writing, Mission, Resources, Metrics, Contact). |
+| `styles.css` | Site-specific layer (tab routing, hero, feature cards, résumé) over the shared theme. |
+| `noprofits-theme.css` / `noprofits-theme.js` | Vendored shared design system (chrome, buttons, tokens, dark/light). |
+| `nonprofits.js` | Tab routing, theme toggle, mobile nav, the "Print résumé" action, and the live blog feed on the Writing tab. |
+| `fonts/`, `*.svg`, `og-image.png` | Self-hosted fonts, icons, brandmark, and social card. |
+| `CNAME`, `_headers` | GitHub Pages custom domain and response headers. |
 
-## Local Development Setup
+## The tools it links to
 
-1. Clone the repository.
-2. Install dependencies (if using a package manager like npm or yarn).
-3. Configure a local CORS proxy for ProPublica API requests (optional, but recommended for development).
-4. Open `index.html` in a web browser or use a local development server.
+The transparency tools are **separate projects** with their own repos and
+subdomains — this site just points at them:
 
-## Code Structure
+- **Search** ([search.noprofits.org](https://search.noprofits.org)) — look up any
+  U.S. nonprofit's mission, Form 990 financials, and efficiency metrics.
+  Repo: [`noprofits-org/search`](https://github.com/noprofits-org/search).
+- **Grants** ([grants.noprofits.org](https://grants.noprofits.org)) — interactive
+  map of how grant funding moves between organizations, grantor to grantee.
+  Repo: [`noprofits-org/grants`](https://github.com/noprofits-org/grants).
+- **Blog** ([blog.noprofits.org](https://blog.noprofits.org)) — field notes on
+  nonprofit data, automation, and the command line (Hakyll, with LaTeX/TikZ).
+  Repo: [`noprofits-org/blog`](https://github.com/noprofits-org/blog).
 
-The codebase is primarily organized into three main JavaScript files:
+## Local development
 
-* `npsearch.html`: This file contains the HTML structure of the application, including search input fields, organization details display areas, and charts. It also includes JavaScript code for basic search functionality and data binding to the UI.
-* `styles.css`: This file contains TailwindCSS classes used for styling the application's layout and visual elements.
-* `nonprofits.js`: This file contains the core application logic, including:
-    * Fetching organization data from the ProPublica API.
-    * Parsing and processing API responses.
-    * Calculating efficiency metrics (program efficiency, fundraising efficiency, administrative rate).
-    * Generating chart data for financial trends visualization.
+No tooling required:
 
-## Current Features
+```sh
+# open directly…
+open index.html
 
-* **Search Functionality:** Users can search for nonprofit organizations by name.
-* **Organization Details:** Displays basic information about an organization, including its mission statement, address, and tax classification.
-* **Financial Data:** Shows key financial data points from the most recent 990 filing, including total revenue, expenses, assets, and liabilities.
-* **Efficiency Metrics:** Calculates and displays three key efficiency metrics with color-coded progress bars and hover tooltips for thresholds:
-    * Program Efficiency
-    * Fundraising Efficiency
-    * Administrative Rate
-* **Financial Trends Chart:** Visualizes trends in revenue, expenses, and net assets over time using Chart.js.
-* **Mobile-Responsive Design:** The application adjusts its layout for optimal viewing on various screen sizes.
-* **Basic Error Handling:** Handles potential errors during API requests and data processing.
+# …or serve locally so root-relative paths (/favicon.svg, /fonts/…) resolve
+python3 -m http.server 8000   # then visit http://localhost:8000
+```
 
-## Next Steps
+Serving over HTTP (rather than `file://`) is recommended so the absolute asset
+paths and the blog feed fetch behave the same as in production.
 
-The following features are planned for future development sessions:
+## Deployment
 
-* **Additional Sustainability Metrics:**
-    * Months of Cash (based on current assets vs monthly expenses)
-    * Revenue Diversification metric
-    * Year-over-year growth visualization
-* **Search Enhancements:**
-    * Add state/region filter
-    * Add revenue range filter
-    * Add NTEE code (organization type) filter
-    * Save recent searches functionality
-* **UI/UX Improvements:**
-    * Add loading states for metrics calculations
-    * Implement comparison view for multiple organizations
-    * Add data download/export functionality
-    * Enhance mobile experience
-* **Documentation:**
-    * Add JSDoc comments to improve code readability
-    * Create contributing guidelines for developers interested in contributing to the project
-    * Add deployment instructions for deploying the application to a production environment
+Pushing to `main` publishes to GitHub Pages automatically. The custom domain is
+configured in `CNAME` (`noprofits.org`).
 
-## Files to Modify for Adding New Features
+## License
 
-* `npsearch.html`: This file will likely require the most modifications to add new search filters, metrics, and UI components for displaying additional data or functionalities.
-* `styles.css`: New CSS classes might be needed to style the additional UI components introduced for new features.
-* `nonprofits.js`: The core logic for fetching data, calculating metrics, and generating visualizations might need to be extended to handle new metrics and functionalities.
+BSD-3-Clause.

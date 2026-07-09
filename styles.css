@@ -144,11 +144,17 @@ main p { margin: 12px 0 0; }
   background: var(--text);
 }
 
-/* Mobile scrim behind the nav dropdown. */
+/* Mobile scrim behind the nav dropdown.
+   z-index must stay BELOW the header's stacking context (.np-header is
+   position:sticky; z-index:50). The nav dropdown lives inside the header, so
+   its own z-index only competes within that context — at the root level the
+   whole header sits at 50. A scrim above 50 would paint over the menu links
+   and swallow every tap (closing the menu instead of navigating). Keep it at
+   40: above page content (0), below the header + its dropdown. */
 .mobile-overlay {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: 40;
   background: rgba(20, 20, 20, 0.45);
   opacity: 0;
   visibility: hidden;
@@ -259,6 +265,18 @@ main p { margin: 12px 0 0; }
 @media (min-width: 900px) {
   .hero p { font-size: 20px; }
 }
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+.hero-actions .np-btn-primary .arrow { color: var(--on-accent); }
+.hero-actions .np-btn-secondary .arrow { color: var(--accent); }
+
+/* "Selected work" label above the Home feature grid. */
+.work-label { margin-top: 44px; }
+.work-label + .feature-grid { margin-top: 16px; }
 
 /* -----------------------------------------------------------------------------
    FEATURE CARDS (Home + résumé portfolio)
@@ -590,3 +608,47 @@ main p { margin: 12px 0 0; }
   text-decoration: none;
 }
 .contact-mail:hover { text-decoration: underline; }
+
+/* -----------------------------------------------------------------------------
+   PRINT — the Résumé tab is the print target (the "Print résumé" button
+   switches to it, then calls window.print()). The theme already hides the
+   header, footer, and theme toggle; this flattens the résumé to clean ink on
+   white so the browser's print / Save-as-PDF output reads like a document.
+   Non-active tabs are display:none already, so only the résumé prints.
+   ----------------------------------------------------------------------------- */
+@media print {
+  .mobile-overlay,
+  #hamburger,
+  #resume-print,
+  .hero-actions { display: none !important; }
+
+  body { background: #fff !important; }
+  .shell { max-width: none; padding: 0; }
+  .tab-content.active { padding: 0; animation: none; }
+
+  /* Ink, not screen color. */
+  #resume,
+  #resume h1,
+  #resume h2,
+  #resume h3,
+  #resume p,
+  #resume li,
+  #resume a,
+  #resume strong { color: #16221D !important; }
+  #resume .resume-pip,
+  #resume .pub-venue,
+  #resume .resume-when { color: #555 !important; }
+  #resume a { text-decoration: none !important; }
+
+  /* Flatten cards; keep related blocks from splitting across pages. */
+  #resume .card,
+  #resume .feature-card {
+    border: 1px solid #ccc !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+  #resume .resume-job,
+  #resume .resume-pubs li { break-inside: avoid; }
+  #resume .section-head { break-after: avoid; }
+}
