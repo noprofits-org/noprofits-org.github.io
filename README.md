@@ -1,13 +1,12 @@
 # noprofits.org
 
-The personal site and project hub for **Peter Johnston** — a project &
-operations coordinator who builds office systems and open-source tools for
-nonprofit transparency. Served at [www.noprofits.org](https://www.noprofits.org/)
-via GitHub Pages.
+The project hub for **noprofits.org** — open tools that make nonprofit money
+legible. Served at [www.noprofits.org](https://www.noprofits.org/) via GitHub
+Pages. The person behind it is [Peter V. Johnston](https://pvjohnston.com).
 
 This repository is the **landing site** only. It's a single, dependency-free
-static page: résumé, selected work, and links out to the tools and writing that
-live on their own subdomains and in their own repositories.
+static page: selected tools, mission, resources, metrics, and links out to
+the apps and writing that live on their own subdomains.
 
 ## What's here
 
@@ -16,10 +15,10 @@ Open `index.html` in a browser and it runs.
 
 | File | Purpose |
 | --- | --- |
-| `index.html` | The whole site — a tabbed single page (Home, Résumé, Writing, Mission, Resources, Metrics, Contact). |
-| `styles.css` | Site-specific layer (tab routing, hero, feature cards, résumé) over the shared theme. |
+| `index.html` | The whole site — a tabbed single page (Home, Writing, Mission, Resources, Metrics, Contact). |
+| `styles.css` | Site-specific layer (tab routing, hero, feature cards) over the shared theme. |
 | `noprofits-theme.css` / `noprofits-theme.js` | Vendored shared design system (chrome, buttons, tokens, dark/light). |
-| `nonprofits.js` | Tab routing, theme toggle, mobile nav, the "Print résumé" action, and the live blog feed on the Writing tab. |
+| `nonprofits.js` | Tab routing, theme toggle, mobile nav, `#resume` redirect to pvjohnston.com, and the live blog feed on the Writing tab. |
 | `fonts/`, `*.svg`, `og-image.png` | Self-hosted fonts, icons, brandmark, and social card. |
 | `CNAME`, `_headers` | GitHub Pages custom domain and response headers. |
 

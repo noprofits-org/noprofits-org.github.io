@@ -537,11 +537,16 @@ const NoProfits = (() => {
    */
   function init() {
     try {
+      // The résumé used to live at #resume. It now lives on the personal site.
+      if (window.location.hash === '#resume') {
+        window.location.replace('https://pvjohnston.com/resume.html');
+        return;
+      }
       cacheDOMElements();
       initThemeToggle();
       initMobileMenu();
       initTabs();
-      initResumePrint(); // "Print résumé" button on the Résumé tab
+      initResumePrint();
       loadBlogPosts(); // populate the Home blog-card preview + Blog tab list
     } catch (error) {
       console.error('Error initializing NoProfits.org:', error);
